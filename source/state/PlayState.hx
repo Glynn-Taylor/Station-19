@@ -1,5 +1,10 @@
 package state ; 
-import entities.Light;
+import com.pdev.lighting.LightEngine;
+import com.pdev.lighting.Light;
+import com.pdev.lighting.occlusion.ShadowSegment;
+import com.pdev.lighting.PointInt;
+import com.pdev.tools.LightTool;
+//import entities.Light;
 import flixel.addons.display.FlxZoomCamera;
 import flixel.addons.editors.ogmo.FlxOgmoLoader;
 import flixel.effects.particles.FlxEmitter;
@@ -19,6 +24,7 @@ import flixel.util.FlxRandom;
 import flixel.util.FlxSpriteUtil;
 import flixel.util.FlxTimer;
 import openfl.Assets;
+import openfl.display.BitmapData;
 import openfl.geom.Point;
 import openfl.Lib;
 import openfl.display.BlendMode;
@@ -46,13 +52,15 @@ class PlayState extends FlxState
 	//Group var
 	private var _player:Player;
 	public var _grpArrows:FlxTypedGroup<Arrow>;
-	public var _grpLight:FlxTypedGroup<Light>;
+	//public var _grpLight:FlxTypedGroup<Light>;
 	//Emitter var
 	private var _gibs:FlxEmitter;
 	//Util var
 	private var _sndHit:FlxSound;
 	private var _sndPickup:FlxSound;
 	private var _victoryString:String = "";				//Temp store for victory string to enable pause before state transistion
+	private var engine:LightEngine;
+	private var canvas:BitmapData;
 	
 	//Initialisation
 	override public function create():Void 
@@ -60,11 +68,13 @@ class PlayState extends FlxState
 		//FlxG.camera.zoom*=2;
 		//FlxG.resizeGame(Std.int(FlxG.width*2), Std.int(FlxG.height*2));
 		//LIGHTING//
+		engine = new LightEngine();
+		
 		bgColor = 0xFF000000;
-		_grpLight = new FlxTypedGroup<Light>();
+		//_grpLight = new FlxTypedGroup<Light>();
 		darkness = new FlxSprite(0,0);
 		darkness.makeGraphic(FlxG.width, FlxG.height, 0xff000000);
-		darkness.scrollFactor.x = darkness.scrollFactor.y = 0;
+		//darkness.scrollFactor.x = darkness.scrollFactor.y = 0;
 		darkness.blend = BlendMode.MULTIPLY;
 		//FlxG.resizeGame(Reg.GAME_WIDTH, Reg.GAME_HEIGHT);
 		//MAP//
@@ -73,7 +83,7 @@ class PlayState extends FlxState
 		_mTiles.setTileProperties(1, FlxObject.NONE);	//Set tile 1 to be non collidable
 		_mTiles.setTileProperties(2, FlxObject.ANY);	//Set tile 2 to be collidable, makes 2+ collidable too if not set further
 		_mTiles.immovable = true;						//Ensure wall immovable (default)
-		add(_mTiles);									//Add walls to scene
+											//Add walls to scene
 		
 		_mWalls = _map.loadTilemap(FileReg.mapTilesBG, 16, 16, "tiles_walls");	//Load map decals (after players so in front)
 		_mWalls.setTileProperties(1, FlxObject.NONE);	//Set non collideable
@@ -116,7 +126,8 @@ class PlayState extends FlxState
 		
 		
 		
-		add(_grpLight);
+		//add(_grpLight);
+		darkness.antialiasing = true;
 		add(darkness);
 		
 		FlxG.camera.fade(FlxColor.BLACK, .33, true);	//Fade camera in
@@ -129,7 +140,10 @@ class PlayState extends FlxState
 		FlxG.camera.width = Std.int(FlxG.camera.width / 2);
 		FlxG.camera.height = Std.int(FlxG.camera.height / 2);
 		FlxG.camera.follow(_player, FlxCamera.STYLE_LOCKON,null,0);
-		
+		//darkness.pixels = canvas;
+		darkness.dirty = true;
+		add(_mTiles);
+		loadLighting();
 		super.create();
 	}
 	
@@ -145,8 +159,10 @@ class PlayState extends FlxState
 		
 	}
 	override public function draw():Void {
-		FlxSpriteUtil.fill(darkness, 0xff000000);
+		//FlxSpriteUtil.fill(darkness, 0xff000000);
+		engine.render(darkness.pixels, 0, 0);
 		super.draw();
+		
 	}
 	
 	//Ends the game and transitions to new state with victory string
@@ -156,7 +172,6 @@ class PlayState extends FlxState
 			FlxG.switchState(new EndGameState(_victoryString));	//Switch state
 		});
 	}
-	
 	
 	//Get all of the spawn positions from the oel
 	private function createEntities(entityName:String, entityData:Xml):Void
@@ -176,10 +191,17 @@ class PlayState extends FlxState
 		
 			var x:Int = Std.parseInt(entityData.get("x"));
 			var y:Int = Std.parseInt(entityData.get("y"));
-			var _light:Light = new Light(x, y,darkness, Std.parseFloat(entityData.get("Scale")));
-			_light.color=(Std.parseInt("0x"+entityData.get("Color").substring(1)));
-			//_light.color = Std.parseInt(entityData.get("Color"));
-			_grpLight.add(_light);
+			//var _light:Light = new Light(x, y,darkness, Std.parseFloat(entityData.get("Scale")));
+			//_light.color=(Std.parseInt("0x"+entityData.get("Color").substring(1)));
+			//_grpLight.add(_light);
+			
+				var light3:Light = new Light( LightTool.radialLightMap( 512, 512, 0.6));
+				light3.x = x;
+				light3.y = y;
+				trace(x);
+				trace(y);
+				engine.addLight(light3);
+			
 		}
 		
 	}
@@ -223,5 +245,30 @@ class PlayState extends FlxState
 		_sndPickup= FlxDestroyUtil.destroy(_sndPickup);
 		_victoryString = null;	
 		FlxG.camera.zoom = 1;
+	}
+	
+	private function loadLighting():Void {
+		var map:Array<Int> = _mTiles.getData(false);
+		var num:Int = -1;
+		var tileSize:Int = Math.floor(_mTiles.width / _mTiles.widthInTiles);
+		var offset:Int = Math.floor(tileSize / 2);
+		for (row in 0 ... _mTiles.heightInTiles)
+		{
+			for (collumn in 0 ... _mTiles.widthInTiles) {
+				num = map[collumn + row * _mTiles.widthInTiles];
+				if (num > -1) {
+					var obj:ShadowSegment = new ShadowSegment(collumn*tileSize,row*tileSize);
+					obj.add( new PointInt( 0, 0));
+					obj.add( new PointInt( tileSize, 0));
+					obj.add( new PointInt( tileSize, tileSize));
+					obj.add( new PointInt( 0, tileSize));
+			
+					obj.isClosed = true;
+			
+					engine.addOccluder( obj);
+				}
+			}
+		}
+			
 	}
 }
