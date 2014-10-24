@@ -50,19 +50,14 @@ class Player extends FlxSprite
 	
 	private var _skinSwatch:Array<Int> = [0xFFF6D5A4, 0xFFF6D5A4, 0xFFCFAC84, 0xFFCFA97A, 0xFFC29369, 0xFFBA8960, 0xFFB57D58, 0xFFBD815C, 0xFFAA7651, 0xFFA87445, 0xFF8E5B3C, 0xFF845239, 0xFF7E4E37, 0xFF6B4532, 0xFF67452C, 0xFF502F1E, 0xFF573C27, 0xFF31221B];
 	//Constructor
-	public function new(X:Float=0, Y:Float=0) 
+	public function new(X:Float=0, Y:Float=0,graphic:String) 
 	{											//Set player id (controller number)
 		super(X, Y);
-		if(Reg.playerPixels==null)
-			loadGraphic(FileReg.imgPlayer, true, 32, 32);	//Load sprite
+		if(Reg.playerPixels==null||graphic!="")
+			loadGraphic(graphic, true, 32, 32);	//Load sprite
 		else
 			loadGraphic(Reg.playerPixels,true,32,32);
-		setFacingFlip(FlxObject.LEFT, false, false);			//Assign flipping of animation based on "facing" variable
-		setFacingFlip(FlxObject.RIGHT, true, false);			
-		animation.add("d", [4, 4, 4, 4], 6, false);				//Assign frames to animation names
-		animation.add("lr", [8, 9, 10, 11, 12, 13, 14, 15], 12, false);
-
-		animation.add("u", [4, 4, 4, 4], 6, false);
+		createAnimations();
 		maxVelocity.set(80, 400);
 		acceleration.y = 400;									//Setup gravity
 		drag.x = maxVelocity.x * 10;
@@ -88,6 +83,13 @@ class Player extends FlxSprite
 	public function setGameScale():Void {
 		scale.set(0.5, 0.75);
 	}
+	public function createAnimations() {
+		setFacingFlip(FlxObject.LEFT, false, false);			//Assign flipping of animation based on "facing" variable
+		setFacingFlip(FlxObject.RIGHT, true, false);			
+		animation.add("d", [4, 4, 4, 4], 6, false);				//Assign frames to animation names
+		animation.add("lr", [8, 9, 10, 11, 12, 13, 14, 15], 12, false);
+		animation.add("u", [4, 4, 4, 4], 6, false);
+	}
 	//Runs every frame
 	override public function update():Void 
 	{
@@ -105,7 +107,7 @@ class Player extends FlxSprite
 		//syncText();												//Sets ammo indicator position
 		super.update();
 		
-		FlxG.log.add("derp");
+		
 	}
 	
 	function keyboardButtons() 
@@ -271,5 +273,10 @@ class Player extends FlxSprite
 			}
 
 		}
+	}
+	public function resetColorCache() {
+		_hair = [0xFFEFD074, 0xFFD58308, 0xFF824100];
+		_armor= [0xFFFFF200, 0xFFFFC90E];
+		_skin= [0xFFF6D5A4, 0xFFDE9462];
 	}
 }

@@ -29,6 +29,8 @@ class FileReg
 	public static inline var imgDecal:String = imgPath + "decaltiles.png";
 	public static inline var imgGibs:String = imgPath + "gibs.png";
 	public static inline var imgPlayer:String = imgCharPath + "player_female.png";
+	public static inline var imgPlayerMale:String = imgCharPath + "player_male.png";
+	public static inline var imgPlayerNeutral:String = imgCharPath + "player_helmet.png";
 	//public static inline var imgTiles:String = imgPath + "tiles.png";
 	public static inline var imgLight:String = imgMapPath + "light.png";
 	public static inline var imgSlider:String = uiPath + "slider.png";

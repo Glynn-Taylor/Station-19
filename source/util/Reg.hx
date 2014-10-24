@@ -25,7 +25,7 @@ class Reg
 	
 	public static inline var GAME_WIDTH:Int = 300;
 	public static inline var GAME_HEIGHT:Int = 200;
-	public static inline var TEXT_COLOR:Int = 0xBAFC19;
+	public static inline var TEXT_COLOR:Int = 0xFFBAFC19;
 	
 	
 }

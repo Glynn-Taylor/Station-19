@@ -174,7 +174,7 @@ class PlayState extends FlxState
 		if (entityName == "spawn_player")						//If a spawn position
 		{
 			if(_player==null){
-				_player = new Player(FlxG.width / 2 - 5, 30);	//Position changed on next line, stores pID and colour
+				_player = new Player(FlxG.width / 2 - 5, 30,"");	//Position changed on next line, stores pID and colour
 				//_player.dirty = true;
 			}
 			var x:Int = Std.parseInt(entityData.get("x"));

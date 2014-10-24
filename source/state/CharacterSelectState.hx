@@ -1,9 +1,12 @@
 package state;
 import entities.Light;
 import flixel.addons.ui.FlxSlider;
+import flixel.animation.FlxAnimation;
+import flixel.animation.FlxAnimationController;
 import flixel.FlxObject;
 import flixel.util.FlxColorUtil;
 import flixel.util.FlxGradient;
+import flixel.util.loaders.CachedGraphics;
 import player.Player;
 import util.CharacterCreationStore;
 //import flixel.addons.ui.FlxUISlider;
@@ -15,7 +18,7 @@ import flixel.text.FlxText;
 import flixel.ui.FlxButton;
 import flixel.util.FlxColor;
 import flixel.util.FlxDestroyUtil;
-import flixel.util.FlxSpriteUtil;
+using flixel.util.FlxSpriteUtil;
 import openfl.display.BitmapData;
 import openfl.display.BlendMode;
 import openfl.geom.Matrix;
@@ -26,8 +29,8 @@ import util.GamepadIDs;
 import util.Reg;
 
 /**
- * ...
  * @author Glynn Taylor
+ * State for the character creation screen.
  */
 class CharacterSelectState extends FlxState
 {
@@ -36,7 +39,7 @@ class CharacterSelectState extends FlxState
 	private static inline var _btnOffset:Int = 32;
 	//UI//
 	private var _btnQuit:FlxButton;
-	private var _warningMsg:FlxText;
+	private var _hairChoiceMsg:FlxText;
 	private var darkness:FlxSprite;
 	//PLAYER//
 	private var _player:Player;
@@ -45,7 +48,10 @@ class CharacterSelectState extends FlxState
 	var sliderHair:FlxSlider;
 	var sliderArmor:FlxSlider;
 	var sliderSkin:FlxSlider;
+	var sliderHairChoice:FlxSlider;
 	private var hsv:Array<Int>;
+	private var hairStyles:Array<String> = [FileReg.imgPlayer,FileReg.imgPlayerMale,FileReg.imgPlayerNeutral];
+	var _char:CharacterCreationStore;
 	/**
 	 * Function that is called up when to state is created to set it up. 
 	 */
@@ -53,7 +59,7 @@ class CharacterSelectState extends FlxState
 	{
 		FlxG.mouse.visible = true;
 		bgColor = 0xFF000000;
-		_player = new Player(FlxG.width / 2, 45);
+		_player = new Player(FlxG.width / 2, 45,hairStyles[0]);
 		_player.scale.x = _player.scale.y=4;
 		_player.x -= _player.width / 2;
 		_player.moves = false;
@@ -88,10 +94,7 @@ class CharacterSelectState extends FlxState
 		add(effect);
 		
 		
-		_warningMsg= new FlxText(0, (FlxG.height / 3) - 18, 0,"Requires controllers to play", 8);
-		_warningMsg.alignment = "center";
-		//_warningMsg.screenCenter(true, false);
-		//add(_warningMsg);
+		
 		
 		var sndSelect:FlxSound = FlxG.sound.load(FileReg.sndSelect);//Load select sound
 		
@@ -101,16 +104,33 @@ class CharacterSelectState extends FlxState
 		_btnQuit.loadGraphic(FileReg.uiBtn);
 		_btnQuit.label.color = Reg.TEXT_COLOR;
 		//_btnQuit.screenCenter();
-		_btnQuit.x = FlxG.width / 2 - _btnQuit.width / 2;
+		_btnQuit.x = FlxG.width / 2 - _btnQuit.frameWidth / 2;
 		_btnQuit.y += 4 * _btnOffset;								//Set position
 		_btnQuit.onUp.sound = sndSelect;							//set sound to select
 		add(_btnQuit);	//add button to scene
 		hsv = FlxColorUtil.getHSVColorWheel();
 
-        var _char:CharacterCreationStore = new CharacterCreationStore();
+        _char = new CharacterCreationStore();
        // add(_char);
 		
-		sliderSkin = new FlxSlider(_char, "skinColor", FlxG.width/2-100, FlxG.height/2 +0 * _btnOffset,0,17,200,10,10,FlxColor.WHITE,FlxColor.WHITE);
+		var leftHairChoice = new FlxButton( FlxG.width / 2 - 75, FlxG.height / 2 + -1 * _btnOffset, "<", setHairChoiceLeft);
+		leftHairChoice.scale.x = 0.3;
+		leftHairChoice.x -= leftHairChoice.frameWidth / 2;
+		add(leftHairChoice);
+		var rightHairChoice = new FlxButton( FlxG.width / 2 + 75, FlxG.height / 2 + -1 * _btnOffset, ">", setHairChoiceRight);
+		rightHairChoice.scale.x = 0.3;
+		rightHairChoice.x -= rightHairChoice.frameWidth / 2;
+		add(rightHairChoice);
+		_hairChoiceMsg= new FlxText(0, FlxG.height / 2 + -1 * _btnOffset+10, 0,"Hair style 1", 8);
+		_hairChoiceMsg.alignment = "center";
+		_hairChoiceMsg.screenCenter(true, false);
+		add(_hairChoiceMsg);
+		//sliderHairChoice = new FlxSlider(_char, "hairChoice", FlxG.width/2-100, FlxG.height/2 +-1 * _btnOffset,0,hairStyles.length-1,200,10,5,FlxColor.WHITE,FlxColor.WHITE);
+		//sliderHairChoice.callback = setHairChoice;
+		//sliderHairChoice.setTexts("Hair Style", false, null, null);
+		//add(sliderHairChoice);
+	   
+		sliderSkin = new FlxSlider(_char, "skinColor", FlxG.width/2-100, FlxG.height/2 +0 * _btnOffset,0,17,200,10,5,Reg.TEXT_COLOR,FlxColor.WHITE);
 		sliderSkin.callback = setSkinColor;
 		sliderSkin.setTexts("Skin color", false, null, null);
 		add(sliderSkin);
@@ -161,6 +181,12 @@ class CharacterSelectState extends FlxState
 			FlxG.switchState(new PlayState());
 		});
 	}
+	private function createPlayer(index:Int) {
+		_player = new Player(FlxG.width / 2, 45,hairStyles[index]);
+		_player.scale.x = _player.scale.y=4;
+		_player.x -= _player.width / 2;
+		_player.moves = false;
+	}
 
 	//Called every frame
 	override public function update():Void
@@ -186,6 +212,29 @@ class CharacterSelectState extends FlxState
 	}
 	private function setSkinColor(c:Float):Void {
 		_player.changeSkinColor(Math.floor(sliderSkin.value));
+	}
+	private function setHairChoiceLeft():Void {
+		_char.hairChoice -= 1;
+		if (_char.hairChoice < 0)
+			_char.hairChoice = hairStyles.length - 1;
+		setHairChoice();
+	}
+	private function setHairChoiceRight():Void {
+		_char.hairChoice += 1;
+		_char.hairChoice %= hairStyles.length;
+		setHairChoice();
+	}
+	private function setHairChoice():Void {
+			//var graph:CachedGraphics = FlxG.bitmap.add(hairStyles[Math.floor(sliderHairChoice.value)], false);
+			//var anim:FlxAnimationController = _player.animation.copyFrom(_player.animation);
+			//_player.pixels = graph.bitmap;
+			_player.loadGraphic(hairStyles[_char.hairChoice], true, 32, 32);
+			//_player.animation = anim;
+			_player.createAnimations();
+			_player.resetColorCache();
+			FlxG.log.add("changing hair");
+			_hairChoiceMsg.text = "Hair style " + Std.string(_char.hairChoice+1);
+		//_player.loadGraphic(hairStyles[Math.floor(sliderHairChoice.value)],true,32,32);
 	}
 	
 }
