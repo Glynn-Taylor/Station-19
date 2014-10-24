@@ -2,6 +2,7 @@ package util ;
 
 import flixel.FlxG;
 import flixel.util.FlxSave;
+import openfl.display.BitmapData;
 
 /**
  * Handy, pre-built Registry class that can be used to store 
@@ -18,7 +19,7 @@ class Reg
 	public static var level:Int = 0;
 
 	public static var saves:Array<FlxSave> = [];
-	
+	public static var playerPixels:BitmapData;
 	public static inline var MENU_WIDTH:Int = 480;
 	public static inline var MENU_HEIGHT:Int = 320;
 	

@@ -31,6 +31,8 @@ class FileReg
 	public static inline var imgPlayer:String = imgCharPath + "player_female.png";
 	//public static inline var imgTiles:String = imgPath + "tiles.png";
 	public static inline var imgLight:String = imgMapPath + "light.png";
+	public static inline var imgSlider:String = uiPath + "slider.png";
+	public static inline var imgSliderBG:String = uiPath + "slider_bg.png";
 	//MAP//
 	public static inline var mapTiles:String = imgMapPath + "tileset.png";
 	public static inline var mapTilesBG:String = imgMapPath + "tileset_bg.png";

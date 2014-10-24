@@ -9,6 +9,7 @@ import flixel.ui.FlxButton;
 import flixel.util.FlxColor;
 import flixel.util.FlxDestroyUtil;
 import flixel.util.FlxSave;
+import player.Player;
 import util.GamepadIDs;
 using flixel.util.FlxSpriteUtil;
 /**

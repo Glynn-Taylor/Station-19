@@ -9,6 +9,7 @@ import flixel.system.FlxSound;
 import flixel.text.FlxText;
 import flixel.util.FlxAngle;
 import flixel.util.FlxColor;
+import flixel.util.FlxColorUtil;
 import flixel.util.FlxDestroyUtil;
 import flixel.util.FlxPoint;
 import flixel.util.FlxTimer;
@@ -16,6 +17,7 @@ import state.EndGameState;
 import state.PlayState;
 import util.FileReg;
 import util.GamepadIDs;
+import util.Reg;
 
 /**
  * ...
@@ -38,12 +40,23 @@ class Player extends FlxSprite
 	private var _sndFire:FlxSound;
 	//UI vars
 	private var _ammoText:FlxText;
+	//Original Color values//
+	private var _hair:Array<Int> = [0xFFEFD074, 0xFFD58308, 0xFF824100];
+	private var _hairGreyscale:Array<Int> = [0xFFCECECE, 0xFF8D8D8D, 0xFF4D4D4D];
+	private var _armor:Array<Int> = [0xFFFFF200, 0xFFFFC90E];
+	private var _armorGreyscale:Array<Int> = [0xFFDADADA, 0xFFC3C3C3];
+	private var _skin:Array<Int> = [0xFFF6D5A4, 0xFFDE9462];
+	private var _skinGreyscale:Array<Int> = [0xFFFFFFFF, 0xFFD4D4D4];
 	
+	private var _skinSwatch:Array<Int> = [0xFFF6D5A4, 0xFFF6D5A4, 0xFFCFAC84, 0xFFCFA97A, 0xFFC29369, 0xFFBA8960, 0xFFB57D58, 0xFFBD815C, 0xFFAA7651, 0xFFA87445, 0xFF8E5B3C, 0xFF845239, 0xFF7E4E37, 0xFF6B4532, 0xFF67452C, 0xFF502F1E, 0xFF573C27, 0xFF31221B];
 	//Constructor
 	public function new(X:Float=0, Y:Float=0) 
 	{											//Set player id (controller number)
 		super(X, Y);
-		loadGraphic(FileReg.imgPlayer, true, 32, 32);	//Load sprite
+		if(Reg.playerPixels==null)
+			loadGraphic(FileReg.imgPlayer, true, 32, 32);	//Load sprite
+		else
+			loadGraphic(Reg.playerPixels,true,32,32);
 		setFacingFlip(FlxObject.LEFT, false, false);			//Assign flipping of animation based on "facing" variable
 		setFacingFlip(FlxObject.RIGHT, true, false);			
 		animation.add("d", [4, 4, 4, 4], 6, false);				//Assign frames to animation names
@@ -53,7 +66,7 @@ class Player extends FlxSprite
 		maxVelocity.set(80, 400);
 		acceleration.y = 400;									//Setup gravity
 		drag.x = maxVelocity.x * 10;
-		scale.set(0.5, 0.75);
+		setGameScale();
 		
 		//Bounding box
 		width = 16;
@@ -72,6 +85,9 @@ class Player extends FlxSprite
 		_ammoText.antialiasing = false;
 		//FlxG.state.add(_ammoText);
 	}
+	public function setGameScale():Void {
+		scale.set(0.5, 0.75);
+	}
 	//Runs every frame
 	override public function update():Void 
 	{
@@ -89,7 +105,7 @@ class Player extends FlxSprite
 		//syncText();												//Sets ammo indicator position
 		super.update();
 		
-		
+		FlxG.log.add("derp");
 	}
 	
 	function keyboardButtons() 
@@ -117,7 +133,7 @@ class Player extends FlxSprite
 	
 	function keyboardMovement() 
 	{
-		var _up:Bool = FlxG.keys.anyPressed(["UP", "W","SPACEBAR"]);
+		var _up:Bool = FlxG.keys.anyPressed(["UP", "W"]);
 		var _down:Bool = FlxG.keys.anyPressed(["DOWN", "S"]);
 		var _left:Bool = FlxG.keys.anyPressed(["LEFT", "A"]);
 		var _right:Bool = FlxG.keys.anyPressed(["RIGHT", "D"]);
@@ -202,6 +218,7 @@ class Player extends FlxSprite
 	//On death of player destroy UI too
 	override public function kill():Void 
 	{
+		trace("am ded");
 		_ammoText.kill();
 		super.kill();
 	}
@@ -222,5 +239,37 @@ class Player extends FlxSprite
 		_sndFire = FlxDestroyUtil.destroy(_sndFire);
 		_sndStep = FlxDestroyUtil.destroy(_sndStep);
 		_ammoText= FlxDestroyUtil.destroy(_ammoText);
+	}
+	
+	public function changeHairColor(col:Int):Void {
+		for ( i  in 0 ... _hair.length) {
+			var newCol:Int =FlxColorUtil.makeFromARGB(1,Math.floor(FlxColorUtil.getRed(col) * FlxColorUtil.getRed(_hairGreyscale[i]) / 255),Math.floor(FlxColorUtil.getGreen(col) * FlxColorUtil.getGreen(_hairGreyscale[i]) / 255),Math.floor(FlxColorUtil.getBlue(col) * FlxColorUtil.getBlue(_hairGreyscale[i]) / 255));
+			if (newCol != FlxColor.BLACK){
+				replaceColor(_hair[i], newCol, false);
+				_hair[i] = newCol;
+			}
+
+		}
+	}
+	public function changeArmorColor(col:Int):Void {
+		for ( i  in 0 ... _armor.length) {
+			var newCol:Int =FlxColorUtil.makeFromARGB(1,Math.floor(FlxColorUtil.getRed(col) * FlxColorUtil.getRed(_armorGreyscale[i]) / 255),Math.floor(FlxColorUtil.getGreen(col) * FlxColorUtil.getGreen(_armorGreyscale[i]) / 255),Math.floor(FlxColorUtil.getBlue(col) * FlxColorUtil.getBlue(_armorGreyscale[i]) / 255));
+			if (newCol != FlxColor.BLACK){
+				replaceColor(_armor[i], newCol, false);
+				_armor[i] = newCol;
+			}
+
+		}
+	}
+	public function changeSkinColor(index:Int):Void {
+		var col:Int = _skinSwatch[index];
+		for ( i  in 0 ... _skin.length) {
+			var newCol:Int =FlxColorUtil.makeFromARGB(1,Math.floor(FlxColorUtil.getRed(col) * FlxColorUtil.getRed(_skinGreyscale[i]) / 255),Math.floor(FlxColorUtil.getGreen(col) * FlxColorUtil.getGreen(_skinGreyscale[i]) / 255),Math.floor(FlxColorUtil.getBlue(col) * FlxColorUtil.getBlue(_skinGreyscale[i]) / 255));
+			if (newCol != FlxColor.BLACK){
+				replaceColor(_skin[i], newCol, false);
+				_skin[i] = newCol;
+			}
+
+		}
 	}
 }

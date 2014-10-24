@@ -158,7 +158,7 @@ class MenuState extends FlxState
 	private function clickPlay():Void
 	{
 		FlxG.camera.fade(FlxColor.BLACK,.33, false,function() {	//Fade out
-			FlxG.switchState(new PlayState());
+			FlxG.switchState(new CharacterSelectState());
 		});
 	}
 	//Handles "options" button click
@@ -191,9 +191,7 @@ class MenuState extends FlxState
 	//Called every frame
 	override public function update():Void
 	{
-		if (FlxG.gamepads.anyPressed(GamepadIDs.START)) {			//Use start for going to playstate
-			FlxG.switchState(new PlayState());
-		}
+		
 		super.update();
 	}
 	override public function draw():Void {

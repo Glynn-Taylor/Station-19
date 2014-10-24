@@ -44,7 +44,7 @@ class PlayState extends FlxState
 	private var _mTilesBehind:FlxTilemap;
 	private var darkness:FlxSprite;
 	//Group var
-	private var _player:Player;
+	public var _player:Player;
 	public var _grpArrows:FlxTypedGroup<Arrow>;
 	public var _grpLight:FlxTypedGroup<Light>;
 	//Emitter var
@@ -54,9 +54,19 @@ class PlayState extends FlxState
 	private var _sndPickup:FlxSound;
 	private var _victoryString:String = "";				//Temp store for victory string to enable pause before state transistion
 	
+	public function new() 
+	{
+		super();
+	
+		
+	}
+	
 	//Initialisation
 	override public function create():Void 
 	{
+		//_player.setGameScale();
+		//_player.moves = true;
+		//_player.reset(0, 0);
 		//FlxG.camera.zoom*=2;
 		//FlxG.resizeGame(Std.int(FlxG.width*2), Std.int(FlxG.height*2));
 		//LIGHTING//
@@ -165,6 +175,7 @@ class PlayState extends FlxState
 		{
 			if(_player==null){
 				_player = new Player(FlxG.width / 2 - 5, 30);	//Position changed on next line, stores pID and colour
+				//_player.dirty = true;
 			}
 			var x:Int = Std.parseInt(entityData.get("x"));
 			var y:Int = Std.parseInt(entityData.get("y"));
@@ -224,4 +235,5 @@ class PlayState extends FlxState
 		_victoryString = null;	
 		FlxG.camera.zoom = 1;
 	}
+	
 }
