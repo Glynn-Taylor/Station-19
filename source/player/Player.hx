@@ -297,5 +297,6 @@ class Player extends FlxSprite
 		_flashLight.setFacingFlip(FlxObject.RIGHT, false, false);	
 		FlxG.state.add(_flashLight);
 		_flashLightEquipped = true;
+		_flashLight.facing = FlxObject.LEFT;
 	}
 }
