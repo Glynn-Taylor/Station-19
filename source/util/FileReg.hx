@@ -12,6 +12,7 @@ class FileReg
 	private static inline var imgPath:String = "assets/images/";
 	private static inline var imgCharPath:String = imgPath+"character/";
 	private static inline var imgMapPath:String = "assets/images/map/";
+	private static inline var imgEntPath:String = "assets/images/entities/";
 	private static inline var mscPath:String = "assets/music/";
 	private static inline var uiPath:String = "assets/ui/";
 	//MUSIC//
@@ -28,11 +29,15 @@ class FileReg
 	public static inline var imgButton:String = imgPath + "button.png";
 	public static inline var imgDecal:String = imgPath + "decaltiles.png";
 	public static inline var imgGibs:String = imgPath + "gibs.png";
+	public static inline var imgFlashlight:String = imgCharPath + "flashlight.png";
 	public static inline var imgPlayer:String = imgCharPath + "player_female.png";
+
 	public static inline var imgPlayerMale:String = imgCharPath + "player_male.png";
 	public static inline var imgPlayerNeutral:String = imgCharPath + "player_helmet.png";
 	//public static inline var imgTiles:String = imgPath + "tiles.png";
 	public static inline var imgLight:String = imgMapPath + "light.png";
+	public static inline var imgDoor:String = imgEntPath + "door.png";
+	public static inline var imgEntButton:String = imgEntPath + "button.png";
 	public static inline var imgSlider:String = uiPath + "slider.png";
 	public static inline var imgSliderBG:String = uiPath + "slider_bg.png";
 	//MAP//

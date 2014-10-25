@@ -22,7 +22,7 @@ class Light extends FlxSprite {
 		this.darkness = darkness;
 		this.blend = BlendMode.SCREEN;
     }
- 
+	
     override public function draw():Void {
       var screenXY:FlxPoint = getScreenXY();
 	  // blend = "screen";

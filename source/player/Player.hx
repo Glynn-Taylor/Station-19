@@ -1,5 +1,6 @@
 package player ;
 
+import entities.Light;
 import flixel.FlxG;
 import flixel.FlxObject;
 import flixel.FlxSprite;
@@ -29,16 +30,20 @@ class Player extends FlxSprite
 	//Constant vars
 	private static inline var SPEED:Float = 10;
 	private static inline var DASH_SPEED:Float = 100;
+	private static inline var FLASHLIGHT_X:Int = 71;
+	private static inline var FLASHLIGHT_Y:Int = 10;
 	//Reference vars
 	//Data vars
 	private var _lastAngle:Float = 0;
 	private var _hasFired:Bool = false;
 	private var _hasDashed:Bool = false;
 	private var _numArrows:Int = 3;
+	private var _flashLightEquipped:Bool = false;
 	//Sound vars
 	private var _sndStep:FlxSound;
 	private var _sndFire:FlxSound;
 	//UI vars
+	private var _flashLight:Light;
 	private var _ammoText:FlxText;
 	//Original Color values//
 	private var _hair:Array<Int> = [0xFFEFD074, 0xFFD58308, 0xFF824100];
@@ -56,7 +61,8 @@ class Player extends FlxSprite
 		if(Reg.playerPixels==null||graphic!="")
 			loadGraphic(graphic, true, 32, 32);	//Load sprite
 		else
-			loadGraphic(Reg.playerPixels,true,32,32);
+			loadGraphic(Reg.playerPixels, true, 32, 32);
+		
 		createAnimations();
 		maxVelocity.set(80, 400);
 		acceleration.y = 400;									//Setup gravity
@@ -103,7 +109,8 @@ class Player extends FlxSprite
 		updateButtons();										//Jumping and firing
 		
 		checkAnimation();
-		
+		if (_flashLightEquipped)
+			_flashLight.setPosition(this.x+FLASHLIGHT_X-(_flashLight.facing==FlxObject.LEFT?_flashLight.width:0), this.y+FLASHLIGHT_Y);
 		//syncText();												//Sets ammo indicator position
 		super.update();
 		
@@ -125,9 +132,13 @@ class Player extends FlxSprite
 			if (acceleration.x > 0) {
 				facing = FlxObject.RIGHT;						//Facing determines flipping
 				animation.play("lr");
+				if (_flashLightEquipped)
+					_flashLight.facing= FlxObject.RIGHT;
 			}else if (acceleration.x < 0) {
 				animation.play("lr");
 				facing = FlxObject.LEFT;
+				if (_flashLightEquipped)
+					_flashLight.facing= FlxObject.LEFT;
 			}else {
 				animation.play("u");
 			}
@@ -278,5 +289,13 @@ class Player extends FlxSprite
 		_hair = [0xFFEFD074, 0xFFD58308, 0xFF824100];
 		_armor= [0xFFFFF200, 0xFFFFC90E];
 		_skin= [0xFFF6D5A4, 0xFFDE9462];
+	}
+	public function createFlashLight(darkness:FlxSprite) {
+		_flashLight = new Light(this.x, this.y, darkness, 1);
+		_flashLight.loadGraphic(FileReg.imgFlashlight, false, 128, 32);
+		_flashLight.setFacingFlip(FlxObject.LEFT, true, false);			//Assign flipping of animation based on "facing" variable
+		_flashLight.setFacingFlip(FlxObject.RIGHT, false, false);	
+		FlxG.state.add(_flashLight);
+		_flashLightEquipped = true;
 	}
 }

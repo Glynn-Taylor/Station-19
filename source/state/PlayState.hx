@@ -1,5 +1,9 @@
 package state ; 
+import entities.Button;
+import entities.Door;
 import entities.Light;
+import entities.Triggerable;
+import entities.Useable;
 import flixel.addons.display.FlxZoomCamera;
 import flixel.addons.editors.ogmo.FlxOgmoLoader;
 import flixel.effects.particles.FlxEmitter;
@@ -47,12 +51,15 @@ class PlayState extends FlxState
 	public var _player:Player;
 	public var _grpArrows:FlxTypedGroup<Arrow>;
 	public var _grpLight:FlxTypedGroup<Light>;
+	public var _solidEnt:FlxTypedGroup<FlxSprite>;
+	public var _useableEnt:FlxTypedGroup<Useable>;
 	//Emitter var
 	private var _gibs:FlxEmitter;
 	//Util var
 	private var _sndHit:FlxSound;
 	private var _sndPickup:FlxSound;
 	private var _victoryString:String = "";				//Temp store for victory string to enable pause before state transistion
+	private var _triggerMap:Map<Int,Triggerable> = new Map<Int,Triggerable>();
 	
 	public function new() 
 	{
@@ -71,6 +78,8 @@ class PlayState extends FlxState
 		//FlxG.resizeGame(Std.int(FlxG.width*2), Std.int(FlxG.height*2));
 		//LIGHTING//
 		bgColor = 0xFF000000;
+		_solidEnt = new FlxTypedGroup<FlxSprite>();
+		_useableEnt = new FlxTypedGroup<Useable>();
 		_grpLight = new FlxTypedGroup<Light>();
 		darkness = new FlxSprite(0,0);
 		darkness.makeGraphic(FlxG.width, FlxG.height, 0xff000000);
@@ -83,7 +92,7 @@ class PlayState extends FlxState
 		_mTiles.setTileProperties(1, FlxObject.NONE);	//Set tile 1 to be non collidable
 		_mTiles.setTileProperties(2, FlxObject.ANY);	//Set tile 2 to be collidable, makes 2+ collidable too if not set further
 		_mTiles.immovable = true;						//Ensure wall immovable (default)
-		add(_mTiles);									//Add walls to scene
+										//Add walls to scene
 		
 		_mWalls = _map.loadTilemap(FileReg.mapTilesBG, 16, 16, "tiles_walls");	//Load map decals (after players so in front)
 		_mWalls.setTileProperties(1, FlxObject.NONE);	//Set non collideable
@@ -92,10 +101,12 @@ class PlayState extends FlxState
 		_mTilesBehind = _map.loadTilemap(FileReg.mapTilesBG, 16, 16, "tiles_behind");	//Load map decals (after players so in front)
 		_mTilesBehind .setTileProperties(1, FlxObject.NONE);	//Set non collideable
 		add(_mTilesBehind );	
-		
+		add(_useableEnt);
+		add(_solidEnt);
 		_map.loadEntities(createEntities, "ent");	//Create spawning positions
 		_map.loadEntities(createEntities, "ent_behind");	//Create spawning positions
-		
+		add(_mTiles);	
+		_player.createFlashLight(darkness);
 		//UTIL//
 		FlxG.mouse.visible = false;						//Hide Cursor
 		_sndHit = FlxG.sound.load(FileReg.sndHit);		//Load sound hit
@@ -126,8 +137,10 @@ class PlayState extends FlxState
 		
 		
 		
+		
 		add(_grpLight);
 		add(darkness);
+		
 		
 		FlxG.camera.fade(FlxColor.BLACK, .33, true);	//Fade camera in
 		//FlxG.camera.setBounds(-200, -200, _map.width,_map.height);
@@ -147,10 +160,12 @@ class PlayState extends FlxState
 	override public function update():Void 
 	{
 		super.update();
-		FlxG.collide( _mTiles, _grpArrows, ping); 		//Check arrows vs walls collision, ping ensures arrows rotate according to new dir
-		FlxG.overlap( _grpArrows, _player, arrowHit);	//Check arrows vs player collision, arrowhit resolves hits
-		FlxG.collide(_grpArrows, _grpArrows);			//Check arrows vs arrows collision
+		//FlxG.collide( _mTiles, _grpArrows, ping); 		//Check arrows vs walls collision, ping ensures arrows rotate according to new dir
+		FlxG.overlap( _useableEnt, _player, useEnt);
+		//FlxG.overlap( _grpArrows, _player, arrowHit);	//Check arrows vs player collision, arrowhit resolves hits
+		//FlxG.collide(_grpArrows, _grpArrows);			//Check arrows vs arrows collision
 		FlxG.collide(_gibs, _mTiles);					//Check gibs vs walls collision
+		FlxG.collide(_solidEnt,_player);	
 		FlxG.collide(_mTiles, _player);				//Check players vs walls collision
 		
 	}
@@ -182,7 +197,7 @@ class PlayState extends FlxState
 			_player.setPosition(x, y);
 			add(_player);
 		}
-		if (entityName == "ent_light")						//If a spawn position
+		else if (entityName == "ent_light")						//If a spawn position
 		{
 		
 			var x:Int = Std.parseInt(entityData.get("x"));
@@ -192,12 +207,34 @@ class PlayState extends FlxState
 			//_light.color = Std.parseInt(entityData.get("Color"));
 			_grpLight.add(_light);
 		}
+		else if (entityName == "ent_door")						//If a spawn position
+		{
+		
+			var x:Int = Std.parseInt(entityData.get("x"));
+			var y:Int = Std.parseInt(entityData.get("y"));
+			//var _light:Light = new Light(x, y,darkness, Std.parseFloat(entityData.get("Scale")));
+			var _door:Door = new Door(x, y);
+			_triggerMap.set(Std.parseInt(entityData.get("door_id")),_door);
+			_solidEnt.add(_door);
+			FlxG.log.add("added door");
+		}
+		else if (entityName == "ent_button")						//If a spawn position
+		{
+		
+			var x:Int = Std.parseInt(entityData.get("x"));
+			var y:Int = Std.parseInt(entityData.get("y"));
+			//var _light:Light = new Light(x, y,darkness, Std.parseFloat(entityData.get("Scale")));
+			var _btn:Button = new Button(x, y,Std.parseInt(entityData.get("door_id")));
+			_useableEnt.add(_btn);
+			FlxG.log.add("added button");
+		}
 		
 	}
 	//Updates the angle of the arrow after bounce (does not change bounding box/velocity just graphical)
-	private function ping(wall:FlxObject, arw:FlxObject):Void
+	private function useEnt(ent:FlxObject, player:FlxObject):Void
 	{
-		cast(arw, Arrow).resetAngle();					//Update angle of arrow after bounce
+		if( FlxG.keys.anyPressed(["E"]))
+		cast(ent, Useable).interact(_player,_triggerMap);					//Update angle of arrow after bounce
 	}
 	//Resolves arrows hits (arrow <-> player)
 	private function arrowHit(arw:FlxObject, person:FlxObject):Void
