@@ -1,4 +1,5 @@
 package entities;
+import flixel.FlxObject;
 import flixel.FlxSprite;
 
 /**
@@ -12,7 +13,7 @@ class Triggerable extends FlxSprite
 	{
 		super(x, y);
 	}
-	public function Trigger(cause:FlxSprite) {
+	public function Trigger(cause:FlxObject) {
 		
     }
 }

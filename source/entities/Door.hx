@@ -1,5 +1,6 @@
 package entities;
 import flixel.FlxG;
+import flixel.FlxObject;
 import flixel.FlxSprite;
 import flixel.tweens.FlxTween;
 import flixel.util.FlxPoint;
@@ -26,7 +27,7 @@ class Door extends Triggerable {
 		animation.add("close", [7,6,5,4,3,2,1,0], 16, false);
 		immovable = true;
     }
-	override public function Trigger(cause:FlxSprite) {
+	override public function Trigger(cause:FlxObject) {
 		_opening = true;
 		if(!_closing){
 			animation.play("open", true, 0);

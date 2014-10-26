@@ -3,6 +3,7 @@ import entities.Button;
 import entities.Door;
 import entities.Light;
 import entities.Triggerable;
+import entities.TriggerText;
 import entities.Useable;
 import flixel.addons.display.FlxZoomCamera;
 import flixel.addons.editors.ogmo.FlxOgmoLoader;
@@ -28,6 +29,7 @@ import openfl.Lib;
 import openfl.display.BlendMode;
 import player.Arrow;
 import player.Player;
+import player.TextDisplay;
 import util.FileReg;
 import util.Reg;
 
@@ -49,10 +51,10 @@ class PlayState extends FlxState
 	private var darkness:FlxSprite;
 	//Group var
 	public var _player:Player;
-	public var _grpArrows:FlxTypedGroup<Arrow>;
 	public var _grpLight:FlxTypedGroup<Light>;
 	public var _solidEnt:FlxTypedGroup<FlxSprite>;
 	public var _useableEnt:FlxTypedGroup<Useable>;
+	public var _grpTrigger:FlxTypedGroup<Triggerable>;
 	//Emitter var
 	private var _gibs:FlxEmitter;
 	//Util var
@@ -60,7 +62,8 @@ class PlayState extends FlxState
 	private var _sndPickup:FlxSound;
 	private var _victoryString:String = "";				//Temp store for victory string to enable pause before state transistion
 	private var _triggerMap:Map<Int,Triggerable> = new Map<Int,Triggerable>();
-	
+	//UI//
+	private var _textDisplay:TextDisplay;
 	public function new() 
 	{
 		super();
@@ -71,28 +74,22 @@ class PlayState extends FlxState
 	//Initialisation
 	override public function create():Void 
 	{
-		//_player.setGameScale();
-		//_player.moves = true;
-		//_player.reset(0, 0);
-		//FlxG.camera.zoom*=2;
-		//FlxG.resizeGame(Std.int(FlxG.width*2), Std.int(FlxG.height*2));
 		//LIGHTING//
 		bgColor = 0xFF000000;
 		_solidEnt = new FlxTypedGroup<FlxSprite>();
 		_useableEnt = new FlxTypedGroup<Useable>();
 		_grpLight = new FlxTypedGroup<Light>();
+		_grpTrigger = new FlxTypedGroup<Triggerable>();
 		darkness = new FlxSprite(0,0);
 		darkness.makeGraphic(FlxG.width, FlxG.height, 0xff000000);
 		darkness.scrollFactor.x = darkness.scrollFactor.y = 0;
 		darkness.blend = BlendMode.MULTIPLY;
-		//FlxG.resizeGame(Reg.GAME_WIDTH, Reg.GAME_HEIGHT);
 		//MAP//
 		_map = new FlxOgmoLoader(FileReg.dataLevel_1);	//Load level
 		_mTiles = _map.loadTilemap(FileReg.mapTiles, 16, 16, "tiles");	//Load walls with tilesheet using tiles layer
 		_mTiles.setTileProperties(1, FlxObject.NONE);	//Set tile 1 to be non collidable
 		_mTiles.setTileProperties(2, FlxObject.ANY);	//Set tile 2 to be collidable, makes 2+ collidable too if not set further
 		_mTiles.immovable = true;						//Ensure wall immovable (default)
-										//Add walls to scene
 		
 		_mWalls = _map.loadTilemap(FileReg.mapTilesBG, 16, 16, "tiles_walls");	//Load map decals (after players so in front)
 		_mWalls.setTileProperties(1, FlxObject.NONE);	//Set non collideable
@@ -107,6 +104,7 @@ class PlayState extends FlxState
 		_map.loadEntities(createEntities, "ent_behind");	//Create spawning positions
 		add(_mTiles);	
 		_player.createFlashLight(darkness);
+		
 		//UTIL//
 		FlxG.mouse.visible = false;						//Hide Cursor
 		_sndHit = FlxG.sound.load(FileReg.sndHit);		//Load sound hit
@@ -125,29 +123,16 @@ class PlayState extends FlxState
 		_mTilesInFront.setTileProperties(1, FlxObject.NONE);	//Set non collideable
 		add(_mTilesInFront);									//Add to scene
 		
-		//ARROW GENERATION//
-		var arw:Arrow;
-		_grpArrows = new FlxTypedGroup<Arrow>(_ARROW_POOL_LIMIT);
-		for(i in 0 ... _ARROW_POOL_LIMIT)
-		{
-			arw = new Arrow( -100, -100);				//Instantiate a new arrow sprite offscreen
-			_grpArrows.add(arw);						//Add it to the pool of arrows
-		}
-		add(_grpArrows);								//Add the group to the scen
-		
-		
-		
+		add(_grpTrigger);
 		
 		add(_grpLight);
 		add(darkness);
 		
+		_textDisplay = new TextDisplay(5 , 0, 100,8);
+		add(_textDisplay);
 		
 		FlxG.camera.fade(FlxColor.BLACK, .33, true);	//Fade camera in
-		//FlxG.camera.setBounds(-200, -200, _map.width,_map.height);
-		//FlxG.camera.follow(_player, FlxCamera.STYLE_NO_DEAD_ZONE, 1);
-		//FlxG.camera.zoom *= 2;
-		//FlxG.camera = new FlxZoomCamera(0, 0, FlxG.width, FlxG.height, FlxG.camera.zoom);
-		//FlxG.camera.setPosition(_player.x, _player.y);
+		
 		FlxG.camera.zoom = 2;
 		FlxG.camera.width = Std.int(FlxG.camera.width / 2);
 		FlxG.camera.height = Std.int(FlxG.camera.height / 2);
@@ -160,10 +145,9 @@ class PlayState extends FlxState
 	override public function update():Void 
 	{
 		super.update();
-		//FlxG.collide( _mTiles, _grpArrows, ping); 		//Check arrows vs walls collision, ping ensures arrows rotate according to new dir
 		FlxG.overlap( _useableEnt, _player, useEnt);
-		//FlxG.overlap( _grpArrows, _player, arrowHit);	//Check arrows vs player collision, arrowhit resolves hits
-		//FlxG.collide(_grpArrows, _grpArrows);			//Check arrows vs arrows collision
+		FlxG.overlap( _grpTrigger,_player, triggerTrig);
+		
 		FlxG.collide(_gibs, _mTiles);					//Check gibs vs walls collision
 		FlxG.collide(_solidEnt,_player);	
 		FlxG.collide(_mTiles, _player);				//Check players vs walls collision
@@ -228,6 +212,18 @@ class PlayState extends FlxState
 			_useableEnt.add(_btn);
 			FlxG.log.add("added button");
 		}
+		else if (entityName == "trigger_text")						//If a spawn position
+		{
+		
+			var x:Int = Std.parseInt(entityData.get("x"));
+			var y:Int = Std.parseInt(entityData.get("y"));
+			var w:Float = Std.parseFloat(entityData.get("width"));
+			var h:Float = Std.parseFloat(entityData.get("height"));
+			//var _light:Light = new Light(x, y,darkness, Std.parseFloat(entityData.get("Scale")));
+			var _txtTrigger:TriggerText = new TriggerText(x,y,w,h,entityData.get("text"));
+			_grpTrigger.add(_txtTrigger);
+			FlxG.log.add("added text trigger");
+		}
 		
 	}
 	//Updates the angle of the arrow after bounce (does not change bounding box/velocity just graphical)
@@ -236,6 +232,12 @@ class PlayState extends FlxState
 		if( FlxG.keys.anyPressed(["E"]))
 		cast(ent, Useable).interact(_player,_triggerMap);					//Update angle of arrow after bounce
 	}
+	
+		private function triggerTrig(ent:FlxObject, player:FlxObject):Void
+	{
+		cast(ent, Triggerable).Trigger(_textDisplay);					//Update angle of arrow after bounce
+	}
+	
 	//Resolves arrows hits (arrow <-> player)
 	private function arrowHit(arw:FlxObject, person:FlxObject):Void
 	{
@@ -265,7 +267,6 @@ class PlayState extends FlxState
 		_mTilesBehind = FlxDestroyUtil.destroy(_mTilesBehind);
 		_mTilesInFront= FlxDestroyUtil.destroy(_mTilesInFront);
 		_player= FlxDestroyUtil.destroy(_player);
-		_grpArrows= FlxDestroyUtil.destroy(_grpArrows);
 		_gibs= FlxDestroyUtil.destroy(_gibs);
 		_sndHit= FlxDestroyUtil.destroy(_sndHit);
 		_sndPickup= FlxDestroyUtil.destroy(_sndPickup);
