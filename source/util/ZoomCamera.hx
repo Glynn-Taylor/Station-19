@@ -1,4 +1,4 @@
-package ;
+package util;
 
 import flixel.FlxCamera;
 import flixel.FlxG;
@@ -40,7 +40,7 @@ class ZoomCamera extends FlxCamera
 		_zoomSpeed = 25;
 		_zoomMargin = 0.25;
 		targetZoom = zoom = Zoom;
-		antialiasing = true;
+		antialiasing = false;
 		
 	}
 	

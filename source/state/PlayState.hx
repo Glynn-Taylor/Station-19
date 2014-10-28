@@ -11,6 +11,7 @@ import entities.TriggerText;
 import entities.Useable;
 import flixel.addons.display.FlxZoomCamera;
 import flixel.addons.editors.ogmo.FlxOgmoLoader;
+import flixel.addons.ui.FlxUIGroup;
 import flixel.effects.particles.FlxEmitter;
 import flixel.FlxCamera;
 import flixel.FlxG;
@@ -37,6 +38,7 @@ import player.Player;
 import player.TextDisplay;
 import util.FileReg;
 import util.Reg;
+import util.ZoomCamera;
 
 /**
  * ...
@@ -71,6 +73,8 @@ class PlayState extends FlxState
 	private var _triggerMap:Map<Int,Triggerable> = new Map<Int,Triggerable>();
 	//UI//
 	private var _textDisplay:TextDisplay;
+	private var guiCamera:FlxCamera;
+	
 	public function new() 
 	{
 		super();
@@ -145,16 +149,34 @@ class PlayState extends FlxState
 		add(_grpLight);
 		add(darkness);
 		
-		_textDisplay = new TextDisplay(5 , 0, 100,8);
-		add(_textDisplay);
+		
+		
+	
 		
 		FlxG.camera.fade(FlxColor.BLACK, .33, true);	//Fade camera in
 		
-		FlxG.camera.zoom = 2;
-		FlxG.camera.width = Std.int(FlxG.camera.width / 2);
-		FlxG.camera.height = Std.int(FlxG.camera.height / 2);
-		FlxG.camera.follow(_player, FlxCamera.STYLE_LOCKON,null,0);
+		//lxG.camera.zoom = 2;
+		//FlxG.camera.width = Std.int(FlxG.camera.width / 2);
+		//FlxG.camera.height = Std.int(FlxG.camera.height / 2);
+		//FlxG.camera.follow(_player, FlxCamera.STYLE_LOCKON,null,0);
+		var zoomCam:ZoomCamera = new ZoomCamera();
+		FlxG.cameras.reset( zoomCam);
+		zoomCam.targetZoom = 2;
+		FlxG.camera.follow(_player, FlxCamera.STYLE_LOCKON, null, 0);
 		
+		 guiCamera = new FlxCamera(0, 0, 480, 320, 1.0);
+		FlxG.cameras.add(guiCamera);
+		var _gui:FlxUIGroup = new FlxUIGroup();
+		
+		_player.addUI(_gui);
+		_textDisplay = new TextDisplay(380 , 0, 100,8);
+		_gui.add(_textDisplay);
+		
+		add(_gui);
+		_gui.cameras = new Array<FlxCamera>();
+		_gui.cameras.push(guiCamera);
+		FlxCamera.defaultCameras.remove(guiCamera);
+		//FlxG.cameras.remove(guiCamera, true);
 		super.create();
 	}
 	
@@ -168,7 +190,8 @@ class PlayState extends FlxState
 		
 		FlxG.collide(_gibs, _mTiles);					//Check gibs vs walls collision
 		FlxG.collide(_mGibs, _mTiles);
-		FlxG.collide(_solidEnt,_player._rifle.group);
+		FlxG.collide(_player._rifle.group, _solidEnt, destroyBullet);
+		FlxG.collide(_player._rifle.group,_mTiles,destroyBullet);
 		FlxG.collide(_solidEnt,_grpEnemies);	
 		FlxG.collide(_solidEnt,_player);	
 		FlxG.collide(_mTiles, _player);				//Check players vs walls collision
@@ -179,6 +202,7 @@ class PlayState extends FlxState
 	}
 	override public function draw():Void {
 		FlxSpriteUtil.fill(darkness, 0xff000000);
+		guiCamera.fill(0x00000000, false, 1);
 		super.draw();
 	}
 	
@@ -310,9 +334,13 @@ class PlayState extends FlxState
 		cast(enemy, Enemy).alert(_player);
 		if (_player._isHidden)
 			cast(enemy, Enemy).standDown();
+		FlxG.log.add("hit enemy with bullet");
 		bullet.kill();
 	}
-	
+	private function destroyBullet(bullet:FlxObject, world:FlxObject):Void
+	{
+		bullet.kill();
+	}
 	//Resolves arrows hits (arrow <-> player)
 	private function arrowHit(arw:FlxObject, person:FlxObject):Void
 	{

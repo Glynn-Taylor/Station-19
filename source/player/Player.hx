@@ -1,6 +1,7 @@
 package player ;
 
 import entities.Light;
+import flixel.addons.ui.FlxUIGroup;
 import flixel.addons.weapon.FlxWeapon;
 import flixel.FlxG;
 import flixel.FlxObject;
@@ -9,6 +10,7 @@ import flixel.input.gamepad.FlxGamepad;
 import flixel.input.keyboard.FlxKeyboard;
 import flixel.system.FlxSound;
 import flixel.text.FlxText;
+import flixel.ui.FlxBar;
 import flixel.util.FlxAngle;
 import flixel.util.FlxColor;
 import flixel.util.FlxColorUtil;
@@ -33,6 +35,8 @@ class Player extends FlxSprite
 	private static inline var DASH_SPEED:Float = 100;
 	private static inline var FLASHLIGHT_X:Int = 71;
 	private static inline var FLASHLIGHT_Y:Int = 10;
+	private static inline var UI_X:Int = 7;
+	private static inline var UI_Y:Int = 0;
 	//Reference vars
 	//Data vars
 	private var _lastAngle:Float = 0;
@@ -42,6 +46,7 @@ class Player extends FlxSprite
 	private var _flashLightEquipped:Bool = false;
 	public var _isHidden:Bool = false;
 	public var _onLadder:Bool = false;
+	private var _flashLightEnergy:Float = 100;
 	//Sound vars
 	private var _sndStep:FlxSound;
 	private var _sndFire:FlxSound;
@@ -49,6 +54,8 @@ class Player extends FlxSprite
 	private var _flashLight:Light;
 	private var _ammoText:FlxText;
 	public var _rifle:FlxWeapon;
+	private var _flashlightBar:FlxBar;
+	private var _healthBar:FlxBar;
 	//Original Color values//
 	private var _hair:Array<Int> = [0xFFEFD074, 0xFFD58308, 0xFF824100];
 	private var _hairGreyscale:Array<Int> = [0xFFCECECE, 0xFF8D8D8D, 0xFF4D4D4D];
@@ -89,7 +96,16 @@ class Player extends FlxSprite
 		_ammoText.alpha = 0.5;
 		_ammoText.antialiasing = false;
 		
+		_flashlightBar = new FlxBar(UI_X+13, UI_Y, FlxBar.FILL_LEFT_TO_RIGHT);
+		_flashlightBar.createImageBar(null, FileReg.uiFlashlightBar, 0x88000000);
+		_flashlightBar.scrollFactor.x = _flashlightBar.scrollFactor.y = 0;
+		_healthBar = new FlxBar(UI_X+13, UI_Y+9, FlxBar.FILL_LEFT_TO_RIGHT);
+		_healthBar.createImageBar(null, FileReg.uiFlashlightBar, 0x88000000);
+		_healthBar.scrollFactor.x = _healthBar.scrollFactor.y = 0;
+		//_flashLight.scale.x = _flashLight.scale.y = 0.5;
+		
 		makeWeapon();
+		health = 100;
 		//FlxG.state.add(_ammoText);
 	}
 	
@@ -105,11 +121,11 @@ class Player extends FlxSprite
 			_rifle.setBulletGravity(0, 0);
 			//	As we use the mouse to fire we need to limit how many bullets are shot at once (1 every 50ms)
 			_rifle.setFireRate(200);
-			
+			_rifle.setBulletBounds(FlxG.worldBounds);
 			FlxG.state.add(_rifle.group);
 	}
 	public function setGameScale():Void {
-		scale.set(0.5, 0.75);
+		scale.set(0.5, 0.8);
 	}
 	public function createAnimations() {
 		setFacingFlip(FlxObject.LEFT, false, false);			//Assign flipping of animation based on "facing" variable
@@ -142,6 +158,8 @@ class Player extends FlxSprite
 				_rifle.fireFromAngle(facing == FlxObject.LEFT?FlxWeapon.BULLET_LEFT:FlxWeapon.BULLET_RIGHT);
 				FlxG.sound.play(FileReg.sndWRifle);
 			}
+		_flashlightBar.percent = _flashLightEnergy;
+		_healthBar.percent = health;
 		super.update();
 		
 		
@@ -343,5 +361,17 @@ class Player extends FlxSprite
 		FlxG.state.add(_flashLight);
 		_flashLightEquipped = true;
 		_flashLight.facing = FlxObject.LEFT;
+	}
+	public function addUI(grp:FlxUIGroup):Void {
+		grp.add(_flashlightBar);
+		grp.add(_healthBar);
+		var flashIcon:FlxSprite = new FlxSprite(UI_X, UI_Y+1);
+		flashIcon.loadGraphic(FileReg.uiFlashlightIcon, false, 6, 6, false);
+		flashIcon.scrollFactor.set(0, 0);
+		grp.add(flashIcon);
+		var healthIcon:FlxSprite = new FlxSprite(UI_X, UI_Y+10);
+		healthIcon.loadGraphic(FileReg.uiHealthIcon, false, 6, 6, false);
+		healthIcon.scrollFactor.set(0, 0);
+		grp.add(healthIcon);
 	}
 }

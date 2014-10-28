@@ -22,6 +22,7 @@ import openfl.system.System;
 import util.FileReg;
 import util.GamepadIDs;
 import util.Reg;
+import util.ZoomCamera;
 using flixel.util.FlxSpriteUtil;
 
 /**
@@ -48,6 +49,7 @@ class MenuState extends FlxState
 	 */
 	override public function create():Void
 	{
+		
 		FlxG.mouse.visible = true;
 		bgColor = 0xFF000000;
 		
@@ -150,7 +152,9 @@ class MenuState extends FlxState
 		var light:Light = new Light(FlxG.width / 2, FlxG.height / 2, darkness,10);
 		add(light);
 		add(darkness);
-		
+		var zoomCam:ZoomCamera = new ZoomCamera();
+		FlxG.cameras.reset( zoomCam);
+		zoomCam.targetZoom = 1;
 		FlxG.camera.fade(FlxColor.BLACK, .33, true);				//Fade in
 		super.create();
 	}

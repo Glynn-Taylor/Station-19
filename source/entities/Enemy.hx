@@ -22,7 +22,9 @@ class Enemy extends FlxSprite
 	private var _trackingText:FlxText;
 	private var _player:Player;
 	private var _trackingPlayer:Bool = false;
+	private var _lastSeen:Int;
 	private static inline var BUMPER_LENGTH = 80;
+	private static inline var IGNORE_MS:Int = 3500;
 	
 	public function new(xPosition:Float, yPosition:Float, hp:Float):Void {
 		super(xPosition, yPosition);
@@ -32,6 +34,7 @@ class Enemy extends FlxSprite
 		_trackingText = new FlxText(x, y, 10, "", 8, true);
 		FlxG.state.add(_frontBumper);
 		FlxG.state.add(_trackingText);
+		
 	}
 	public function checkBumper (player:Player, tiles:FlxTilemap):Void {
 		if (!_trackingPlayer && _frontBumper.overlaps(player)&&!player._isHidden) {

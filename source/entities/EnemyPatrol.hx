@@ -3,6 +3,7 @@ import flixel.effects.particles.FlxEmitter;
 import flixel.FlxSprite;
 import flixel.FlxG;
 import flixel.FlxObject;
+import openfl.Lib;
 import util.FileReg;
 
 class EnemyPatrol extends Enemy{
@@ -34,8 +35,17 @@ class EnemyPatrol extends Enemy{
 				directionX = 1;
 			}
 			if (!_frontBumper.overlaps(_player)) {
-				if (_trackingText.text == "!")
-				_trackingText.text = "?";
+				if (_trackingText.text == "!"){
+					_trackingText.text = "?";
+					_lastSeen = Lib.getTimer();
+				}else {
+					if (Lib.getTimer() >= _lastSeen + Enemy.IGNORE_MS)
+						standDown();
+				}
+			}else {
+				if (_trackingText.text == "?"){
+					_trackingText.text = "!";
+				}
 			}
 		}else {
 			if (touching==FlxObject.LEFT)

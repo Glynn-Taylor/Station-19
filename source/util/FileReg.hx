@@ -54,6 +54,9 @@ class FileReg
 	public static inline var mapTilesBG:String = imgMapPath + "tileset_bg.png";
 	//UI//
 	public static inline var uiBtn:String = uiPath + "button.png";
+	public static inline var uiFlashlightBar:String = uiPath + "flashlight_bar.png";
+	public static inline var uiFlashlightIcon:String = uiPath + "flashlight_icon.png";
+	public static inline var uiHealthIcon:String = uiPath + "health_icon.png";
 	//DATA//
 	public static inline var dataLevel_1:String = dataPath + "level_1.oel";
 	
