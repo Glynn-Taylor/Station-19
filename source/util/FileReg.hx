@@ -26,6 +26,7 @@ class FileReg
 	public static inline var sndSelect:String = sndPath + "select.wav";
 	public static inline var sndToggle:String = sndPath + "button02.wav";
 	public static inline var sndButton:String = sndPath + "button01.wav";
+	public static inline var sndElevator:String = sndPath + "elevator.wav";
 	public static inline var sndStep:String = sndPath + "step.wav";
 	public static inline var sndWin:String = sndPath + "win.wav";
 	public static inline var sndMPain1:String = sndMonsterPath + "pain1.wav";
