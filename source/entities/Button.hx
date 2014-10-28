@@ -26,7 +26,7 @@ class Button extends Useable
 			FlxG.log.add("button triggered id: " + Std.string(_id));
 			_triggerMap.get(_id).Trigger(_player);
 			new FlxTimer(1, canBePressedAgain, 1);
-			FlxG.sound.play(FileReg.sndSelect, 1, false);
+			FlxG.sound.play(FileReg.sndButton, 1, false);
 			_canBePressed =false;
 		}
 	}

@@ -35,8 +35,10 @@ class Player extends FlxSprite
 	private static inline var DASH_SPEED:Float = 100;
 	private static inline var FLASHLIGHT_X:Int = 71;
 	private static inline var FLASHLIGHT_Y:Int = 10;
+	private static inline var FLASHLIGHT_RATE:Float = 0.1;
+	private static inline var MAX_AMMO_IN_CLIP:Int = 16;
 	private static inline var UI_X:Int = 7;
-	private static inline var UI_Y:Int = 0;
+	private static inline var UI_Y:Int = 20;
 	//Reference vars
 	//Data vars
 	private var _lastAngle:Float = 0;
@@ -46,7 +48,11 @@ class Player extends FlxSprite
 	private var _flashLightEquipped:Bool = false;
 	public var _isHidden:Bool = false;
 	public var _onLadder:Bool = false;
+	private var _reloading:Bool = false;
+	private var _canToggle:Bool=true;
 	private var _flashLightEnergy:Float = 100;
+	private var _ammoInClip:Int = 16;
+	private var _ammoOutOfClip:Int = 32;
 	//Sound vars
 	private var _sndStep:FlxSound;
 	private var _sndFire:FlxSound;
@@ -65,6 +71,7 @@ class Player extends FlxSprite
 	private var _skinGreyscale:Array<Int> = [0xFFFFFFFF, 0xFFD4D4D4];
 	
 	private var _skinSwatch:Array<Int> = [0xFFF6D5A4, 0xFFF6D5A4, 0xFFCFAC84, 0xFFCFA97A, 0xFFC29369, 0xFFBA8960, 0xFFB57D58, 0xFFBD815C, 0xFFAA7651, 0xFFA87445, 0xFF8E5B3C, 0xFF845239, 0xFF7E4E37, 0xFF6B4532, 0xFF67452C, 0xFF502F1E, 0xFF573C27, 0xFF31221B];
+	
 	//Constructor
 	public function new(X:Float=0, Y:Float=0,graphic:String) 
 	{											//Set player id (controller number)
@@ -91,15 +98,14 @@ class Player extends FlxSprite
 		_sndFire = FlxG.sound.load(FileReg.sndFire, 1, false);
 		
 		//Setup UI
-		_ammoText = new FlxText(0, 0,0, "|||", 5);
-		_ammoText.color = 0xFFFFFF;
+		_ammoText = new FlxText(UI_X+16, 0,0, Std.string(_ammoInClip)+"/"+Std.string(_ammoOutOfClip), 8);
+		_ammoText.color = Reg.TEXT_COLOR;
 		_ammoText.alpha = 0.5;
 		_ammoText.antialiasing = false;
-		
-		_flashlightBar = new FlxBar(UI_X+13, UI_Y, FlxBar.FILL_LEFT_TO_RIGHT);
+		_flashlightBar = new FlxBar(UI_X+16, UI_Y, FlxBar.FILL_LEFT_TO_RIGHT);
 		_flashlightBar.createImageBar(null, FileReg.uiFlashlightBar, 0x88000000);
 		_flashlightBar.scrollFactor.x = _flashlightBar.scrollFactor.y = 0;
-		_healthBar = new FlxBar(UI_X+13, UI_Y+9, FlxBar.FILL_LEFT_TO_RIGHT);
+		_healthBar = new FlxBar(UI_X + 16, UI_Y + 18 , FlxBar.FILL_LEFT_TO_RIGHT);
 		_healthBar.createImageBar(null, FileReg.uiFlashlightBar, 0x88000000);
 		_healthBar.scrollFactor.x = _healthBar.scrollFactor.y = 0;
 		//_flashLight.scale.x = _flashLight.scale.y = 0.5;
@@ -114,7 +120,7 @@ class Player extends FlxSprite
 		_rifle = new FlxWeapon("rifle", this);
 			
 			//	Tell the weapon to create 100 bullets using a 2x2 white pixel bullet
-			_rifle.makePixelBullet(100, 1, 1, 0xffEEEEEE, 13, 12);
+			_rifle.makePixelBullet(100, 1, 1, 0xff444444, 13, 12);
 			//	Bullets will move at 120px/sec
 			_rifle.setBulletSpeed(256);
 			//	But bullets will have gravity pulling them down to earth at a rate of 60px/sec
@@ -147,23 +153,46 @@ class Player extends FlxSprite
 		updateButtons();										//Jumping and firing
 		
 		checkAnimation();
-		if (_flashLightEquipped)
+		if (_flashLightEquipped){
 			_flashLight.setPosition(this.x + FLASHLIGHT_X - (_flashLight.facing == FlxObject.LEFT?_flashLight.width:0), this.y + FLASHLIGHT_Y);
 		//syncText();
 		//Sets ammo indicator position
-		
-		if (FlxG.keys.pressed.SPACE&&FlxG.game.ticks >=_rifle.nextFire)
-			{
-				FlxG.log.add("Fired bullet");
-				_rifle.fireFromAngle(facing == FlxObject.LEFT?FlxWeapon.BULLET_LEFT:FlxWeapon.BULLET_RIGHT);
-				FlxG.sound.play(FileReg.sndWRifle);
-			}
+		if (_flashLight.visible) {
+			_flashLightEnergy -= FLASHLIGHT_RATE;
+			if (_flashLightEnergy < 1)
+				_flashLight.visible = false;
+		}else {
+			if (_flashLightEnergy < 100)
+				_flashLightEnergy += FLASHLIGHT_RATE;
+		}
+		}
 		_flashlightBar.percent = _flashLightEnergy;
 		_healthBar.percent = health;
 		super.update();
-		
-		
-		
+	}
+	
+	function reload() {
+		if (_ammoOutOfClip > 0) {
+			if (!_reloading) {
+				new FlxTimer(1, reloadWeapon, 1);
+				_reloading = true;
+				FlxG.sound.play(FileReg.sndWEmpty);
+				FlxG.sound.play(FileReg.sndWReload);
+			}
+		}else {
+			FlxG.sound.play(FileReg.sndWEmpty);
+		}
+	}
+	function reloadWeapon(timer:FlxTimer) 
+	{
+		_ammoInClip = _ammoOutOfClip>MAX_AMMO_IN_CLIP?MAX_AMMO_IN_CLIP:_ammoOutOfClip;
+		_ammoOutOfClip -= _ammoInClip;
+		_reloading = false;
+		updateAmmoText();
+	}
+	function updateAmmoText() 
+	{
+		_ammoText.text = Std.string(_ammoInClip) + "/" + Std.string(_ammoOutOfClip);
 	}
 	
 	function keyboardButtons() 
@@ -173,8 +202,36 @@ class Player extends FlxSprite
 				FlxG.switchState(new EndGameState("butts"));	//Switch state
 			});
 		}
+		if (FlxG.keys.pressed.SPACE&&FlxG.game.ticks >=_rifle.nextFire)
+		{
+			if(_ammoInClip>0){
+				FlxG.log.add("Fired bullet");
+				_rifle.fireFromAngle(facing == FlxObject.LEFT?FlxWeapon.BULLET_LEFT:FlxWeapon.BULLET_RIGHT);
+				FlxG.sound.play(FileReg.sndWRifle);
+				_ammoInClip--;
+				updateAmmoText();
+			}else {
+				reload();
+			}
+		}
+		if (FlxG.keys.pressed.F )
+		{
+			if (_canToggle) {
+				_canToggle = false;
+				FlxG.sound.play(FileReg.sndToggle, 1, false);
+				_flashLight.visible = !_flashLight.visible;
+				new FlxTimer(0.3, allowToggle, 1);
+			}
+		}
+		if (FlxG.keys.pressed.R )
+		{
+			reload();
+		}
+		
 	}
-	
+	function allowToggle(timer:FlxTimer) {
+		_canToggle = true;
+	}
 	function checkAnimation() 
 	{
 			//Animation//
@@ -361,16 +418,18 @@ class Player extends FlxSprite
 		FlxG.state.add(_flashLight);
 		_flashLightEquipped = true;
 		_flashLight.facing = FlxObject.LEFT;
+		_flashLight.set_visible(false );
 	}
 	public function addUI(grp:FlxUIGroup):Void {
 		grp.add(_flashlightBar);
 		grp.add(_healthBar);
+		grp.add(_ammoText);
 		var flashIcon:FlxSprite = new FlxSprite(UI_X, UI_Y+1);
-		flashIcon.loadGraphic(FileReg.uiFlashlightIcon, false, 6, 6, false);
+		flashIcon.loadGraphic(FileReg.uiFlashlightIcon, false, 14, 14, false);
 		flashIcon.scrollFactor.set(0, 0);
 		grp.add(flashIcon);
-		var healthIcon:FlxSprite = new FlxSprite(UI_X, UI_Y+10);
-		healthIcon.loadGraphic(FileReg.uiHealthIcon, false, 6, 6, false);
+		var healthIcon:FlxSprite = new FlxSprite(UI_X, UI_Y+19);
+		healthIcon.loadGraphic(FileReg.uiHealthIcon, false, 14, 14, false);
 		healthIcon.scrollFactor.set(0, 0);
 		grp.add(healthIcon);
 	}

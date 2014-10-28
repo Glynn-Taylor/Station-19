@@ -27,7 +27,7 @@ class Elevator extends Triggerable {
 		this.height =10;
 		this.offset.x = 1;
 		this.offset.y = 2;
-		animation.add("moving", [0, 2], 16, false);
+		animation.add("moving", [0, 1], 16, false);
 		animation.add("still", [0], 16, false);
 		_topPoint = p1;
 		_btmPoint = p2;
@@ -57,10 +57,12 @@ class Elevator extends Triggerable {
 			y -= SPEED;
 			if (x == _topPoint.x && y <= _topPoint.y)
 				_upwards = false;
+			animation.play("moving");
 		}else if (_downwards) {
 			y += SPEED;
 			if (x == _btmPoint.x && y >= _btmPoint.y)
 				_downwards = false;
+			animation.play("moving");
 		}
 		
 		super.update();

@@ -24,12 +24,17 @@ class FileReg
 	public static inline var sndFire:String = sndPath + "fire.wav";
 	public static inline var sndPickup:String = sndPath + "pickup.wav";
 	public static inline var sndSelect:String = sndPath + "select.wav";
+	public static inline var sndToggle:String = sndPath + "button02.wav";
+	public static inline var sndButton:String = sndPath + "button01.wav";
 	public static inline var sndStep:String = sndPath + "step.wav";
 	public static inline var sndWin:String = sndPath + "win.wav";
 	public static inline var sndMPain1:String = sndMonsterPath + "pain1.wav";
 	public static inline var sndMPain2:String = sndMonsterPath + "pain2.wav";
 	public static inline var sndMDeath1:String = sndMonsterPath + "death1.wav";
-	public static inline var sndWRifle:String = sndPath+"weapon/" + "cg1.wav";
+	public static inline var sndWRifle:String = sndPath + "weapon/" + "cg1.wav";
+	public static inline var sndWPistol:String = sndPath + "weapon/" + "pistol.wav";
+	public static inline var sndWEmpty:String = sndPath + "weapon/" + "gun_empty.wav";
+	public static inline var sndWReload:String = sndPath+"weapon/" + "pistol_reload.wav";
 	//IMAGES//
 	public static inline var imgButton:String = imgPath + "button.png";
 	public static inline var imgDecal:String = imgPath + "decaltiles.png";
