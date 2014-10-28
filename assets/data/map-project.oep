@@ -304,21 +304,6 @@
       <ValueDefinitions />
       <NodesDefinition Enabled="false" Limit="-1" DrawMode="None" Ghost="false" />
     </EntityDefinition>
-    <EntityDefinition Name="ent_ladder" Limit="-1" ResizableX="false" ResizableY="false" Rotatable="false" RotateIncrement="15">
-      <Size>
-        <Width>16</Width>
-        <Height>16</Height>
-      </Size>
-      <Origin>
-        <X>0</X>
-        <Y>0</Y>
-      </Origin>
-      <ImageDefinition DrawMode="Image" ImagePath="editor_icons\ladder.png" Tiled="false">
-        <RectColor A="255" R="255" G="0" B="0" />
-      </ImageDefinition>
-      <ValueDefinitions />
-      <NodesDefinition Enabled="false" Limit="-1" DrawMode="None" Ghost="false" />
-    </EntityDefinition>
     <EntityDefinition Name="ent_light" Limit="-1" ResizableX="false" ResizableY="false" Rotatable="false" RotateIncrement="15">
       <Size>
         <Width>16</Width>
@@ -389,6 +374,38 @@
         <ValueDefinition xsi:type="StringValueDefinition" Name="text" Default="Trigger text" MaxChars="-1" MultiLine="false" />
       </ValueDefinitions>
       <NodesDefinition Enabled="false" Limit="-1" DrawMode="None" Ghost="false" />
+    </EntityDefinition>
+    <EntityDefinition Name="trigger_ladder" Limit="-1" ResizableX="true" ResizableY="true" Rotatable="false" RotateIncrement="15">
+      <Size>
+        <Width>16</Width>
+        <Height>32</Height>
+      </Size>
+      <Origin>
+        <X>0</X>
+        <Y>0</Y>
+      </Origin>
+      <ImageDefinition DrawMode="Image" ImagePath="editor_icons\ladder.png" Tiled="true">
+        <RectColor A="255" R="255" G="0" B="0" />
+      </ImageDefinition>
+      <ValueDefinitions />
+      <NodesDefinition Enabled="false" Limit="-1" DrawMode="None" Ghost="false" />
+    </EntityDefinition>
+    <EntityDefinition Name="ent_elevator" Limit="-1" ResizableX="false" ResizableY="false" Rotatable="false" RotateIncrement="15">
+      <Size>
+        <Width>32</Width>
+        <Height>16</Height>
+      </Size>
+      <Origin>
+        <X>0</X>
+        <Y>0</Y>
+      </Origin>
+      <ImageDefinition DrawMode="Rectangle" ImagePath="" Tiled="false">
+        <RectColor A="255" R="0" G="0" B="255" />
+      </ImageDefinition>
+      <ValueDefinitions>
+        <ValueDefinition xsi:type="IntValueDefinition" Name="elevator_id" Default="0" Min="0" Max="100" ShowSlider="false" />
+      </ValueDefinitions>
+      <NodesDefinition Enabled="true" Limit="-1" DrawMode="None" Ghost="false" />
     </EntityDefinition>
   </EntityDefinitions>
 </project>

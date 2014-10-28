@@ -18,6 +18,7 @@ class TriggerText extends Triggerable
 		height = h;
 		_text = txt;
 		makeGraphic(Std.int(width), Std.int(height), 0x00FFFFFF, false);
+		_causeType = "text";
 	}
 	override public function Trigger(cause:FlxObject) {
 		if(!_triggered){

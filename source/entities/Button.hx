@@ -1,4 +1,5 @@
 package entities;
+import flixel.FlxG;
 import flixel.FlxSprite;
 import player.Player;
 import util.FileReg;
@@ -18,7 +19,8 @@ class Button extends Useable
 		loadGraphic(FileReg.imgEntButton, false, 16, 32);
 	}
 	
-	override public function interact(_player:Player,_triggerMap:Map<Int,Triggerable>) {
+	override public function interact(_player:Player, _triggerMap:Map<Int,Triggerable>) {
+		FlxG.log.add("button triggered id: " + Std.string(_id));
 		_triggerMap.get(_id).Trigger(_player);
 	}
 }

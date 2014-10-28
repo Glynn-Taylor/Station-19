@@ -8,7 +8,7 @@ import flixel.FlxSprite;
  */
 class Triggerable extends FlxSprite
 {
-
+	public var _causeType:String = "player";
 	public function new(x:Float,y:Float) 
 	{
 		super(x, y);

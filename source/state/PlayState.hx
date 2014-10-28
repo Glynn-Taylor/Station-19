@@ -1,8 +1,12 @@
 package state ; 
 import entities.Button;
 import entities.Door;
+import entities.Elevator;
+import entities.Enemy;
+import entities.EnemyPatrol;
 import entities.Light;
 import entities.Triggerable;
+import entities.TriggerLadder;
 import entities.TriggerText;
 import entities.Useable;
 import flixel.addons.display.FlxZoomCamera;
@@ -20,6 +24,7 @@ import flixel.text.FlxText;
 import flixel.tile.FlxTilemap;
 import flixel.util.FlxColor;
 import flixel.util.FlxDestroyUtil;
+import flixel.util.FlxPoint;
 import flixel.util.FlxRandom;
 import flixel.util.FlxSpriteUtil;
 import flixel.util.FlxTimer;
@@ -55,8 +60,10 @@ class PlayState extends FlxState
 	public var _solidEnt:FlxTypedGroup<FlxSprite>;
 	public var _useableEnt:FlxTypedGroup<Useable>;
 	public var _grpTrigger:FlxTypedGroup<Triggerable>;
+	public var _grpEnemies:FlxTypedGroup<Enemy>;
 	//Emitter var
 	private var _gibs:FlxEmitter;
+	private var _mGibs:FlxEmitter;
 	//Util var
 	private var _sndHit:FlxSound;
 	private var _sndPickup:FlxSound;
@@ -80,10 +87,19 @@ class PlayState extends FlxState
 		_useableEnt = new FlxTypedGroup<Useable>();
 		_grpLight = new FlxTypedGroup<Light>();
 		_grpTrigger = new FlxTypedGroup<Triggerable>();
+		_grpEnemies = new FlxTypedGroup<Enemy>();
 		darkness = new FlxSprite(0,0);
 		darkness.makeGraphic(FlxG.width, FlxG.height, 0xff000000);
 		darkness.scrollFactor.x = darkness.scrollFactor.y = 0;
 		darkness.blend = BlendMode.MULTIPLY;
+		
+		_mGibs = new FlxEmitter();						//Create emitter for gibs
+		_mGibs.setXSpeed( -150, 150);					//Gib settings
+		_mGibs.setYSpeed( -200, 0);
+		_mGibs.acceleration.y = 400;						//Add gravity to gibs
+		_mGibs.setRotation( -720, 720);
+		_mGibs.makeParticles(FileReg.imgMGibs, 25, 16, true, .5);	//Setup gib tilesheet
+												//Add gibs to scene
 		//MAP//
 		_map = new FlxOgmoLoader(FileReg.dataLevel_1);	//Load level
 		_mTiles = _map.loadTilemap(FileReg.mapTiles, 16, 16, "tiles");	//Load walls with tilesheet using tiles layer
@@ -124,7 +140,8 @@ class PlayState extends FlxState
 		add(_mTilesInFront);									//Add to scene
 		
 		add(_grpTrigger);
-		
+		add(_grpEnemies);
+		add(_mGibs);
 		add(_grpLight);
 		add(darkness);
 		
@@ -147,11 +164,18 @@ class PlayState extends FlxState
 		super.update();
 		FlxG.overlap( _useableEnt, _player, useEnt);
 		FlxG.overlap( _grpTrigger,_player, triggerTrig);
+		FlxG.overlap(_player._rifle.group, _grpEnemies, hurtEnemy);
 		
 		FlxG.collide(_gibs, _mTiles);					//Check gibs vs walls collision
+		FlxG.collide(_mGibs, _mTiles);
+		FlxG.collide(_solidEnt,_player._rifle.group);
+		FlxG.collide(_solidEnt,_grpEnemies);	
 		FlxG.collide(_solidEnt,_player);	
 		FlxG.collide(_mTiles, _player);				//Check players vs walls collision
-		
+		FlxG.collide(_mTiles, _grpEnemies);	
+		for (enemy in _grpEnemies) {
+			enemy.checkBumper(_player, _mTiles);
+		}
 	}
 	override public function draw():Void {
 		FlxSpriteUtil.fill(darkness, 0xff000000);
@@ -202,13 +226,31 @@ class PlayState extends FlxState
 			_solidEnt.add(_door);
 			FlxG.log.add("added door");
 		}
+		else if (entityName == "ent_elevator")						//If a spawn position
+		{
+			var x:Int = Std.parseInt(entityData.get("x"));
+			var y:Int = Std.parseInt(entityData.get("y"));
+			var p1:FlxPoint=null;
+			var p2:FlxPoint=null;
+			for ( child in entityData.elementsNamed("node") ) {
+				if (p1 == null) {
+					p1 = new FlxPoint(Std.parseInt(child.get("x")), Std.parseInt(child.get("y")));
+				}else {
+					p2 = new FlxPoint(Std.parseInt(child.get("x")), Std.parseInt(child.get("y")));
+				}
+			}
+			var _ele:Elevator = new Elevator(x, y,p1,p2);
+			_triggerMap.set(Std.parseInt(entityData.get("elevator_id")),_ele);
+			_solidEnt.add(_ele);
+			FlxG.log.add("added elevator");
+		}
 		else if (entityName == "ent_button")						//If a spawn position
 		{
 		
 			var x:Int = Std.parseInt(entityData.get("x"));
 			var y:Int = Std.parseInt(entityData.get("y"));
 			//var _light:Light = new Light(x, y,darkness, Std.parseFloat(entityData.get("Scale")));
-			var _btn:Button = new Button(x, y,Std.parseInt(entityData.get("door_id")));
+			var _btn:Button = new Button(x, y,Std.parseInt(entityData.get("button_id")));
 			_useableEnt.add(_btn);
 			FlxG.log.add("added button");
 		}
@@ -224,6 +266,27 @@ class PlayState extends FlxState
 			_grpTrigger.add(_txtTrigger);
 			FlxG.log.add("added text trigger");
 		}
+		else if (entityName == "trigger_ladder")						//If a spawn position
+		{
+		
+			var x:Int = Std.parseInt(entityData.get("x"));
+			var y:Int = Std.parseInt(entityData.get("y"));
+			var w:Float = Std.parseFloat(entityData.get("width"));
+			var h:Float = Std.parseFloat(entityData.get("height"));
+			//var _light:Light = new Light(x, y,darkness, Std.parseFloat(entityData.get("Scale")));
+			var _ladderTrigger:TriggerLadder = new TriggerLadder(x,y,w,h);
+			_grpTrigger.add(_ladderTrigger);
+			FlxG.log.add("added ladder");
+		}
+		else if (entityName == "spawn_zombie")						//If a spawn position
+		{
+		
+			var x:Int = Std.parseInt(entityData.get("x"));
+			var y:Int = Std.parseInt(entityData.get("y"));
+			var _zomb:EnemyPatrol = new EnemyPatrol(x,y,20,_mGibs);
+			_grpEnemies.add(_zomb);
+			FlxG.log.add("added enemy zombie");
+		}
 		
 	}
 	//Updates the angle of the arrow after bounce (does not change bounding box/velocity just graphical)
@@ -235,7 +298,19 @@ class PlayState extends FlxState
 	
 		private function triggerTrig(ent:FlxObject, player:FlxObject):Void
 	{
-		cast(ent, Triggerable).Trigger(_textDisplay);					//Update angle of arrow after bounce
+		if(cast(ent,Triggerable)._causeType=="text"){
+			cast(ent, Triggerable).Trigger(_textDisplay);					//Update angle of arrow after bounce
+		}else {
+			cast(ent, Triggerable).Trigger(_player);
+		}
+	}
+	private function hurtEnemy(bullet:FlxObject, enemy:FlxObject):Void
+	{
+		cast(enemy, Enemy).hurt(10);					//Update angle of arrow after bounce
+		cast(enemy, Enemy).alert(_player);
+		if (_player._isHidden)
+			cast(enemy, Enemy).standDown();
+		bullet.kill();
 	}
 	
 	//Resolves arrows hits (arrow <-> player)

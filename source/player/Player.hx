@@ -1,6 +1,7 @@
 package player ;
 
 import entities.Light;
+import flixel.addons.weapon.FlxWeapon;
 import flixel.FlxG;
 import flixel.FlxObject;
 import flixel.FlxSprite;
@@ -39,12 +40,15 @@ class Player extends FlxSprite
 	private var _hasDashed:Bool = false;
 	private var _numArrows:Int = 3;
 	private var _flashLightEquipped:Bool = false;
+	public var _isHidden:Bool = false;
+	public var _onLadder:Bool = false;
 	//Sound vars
 	private var _sndStep:FlxSound;
 	private var _sndFire:FlxSound;
 	//UI vars
 	private var _flashLight:Light;
 	private var _ammoText:FlxText;
+	public var _rifle:FlxWeapon;
 	//Original Color values//
 	private var _hair:Array<Int> = [0xFFEFD074, 0xFFD58308, 0xFF824100];
 	private var _hairGreyscale:Array<Int> = [0xFFCECECE, 0xFF8D8D8D, 0xFF4D4D4D];
@@ -65,7 +69,7 @@ class Player extends FlxSprite
 		
 		createAnimations();
 		maxVelocity.set(80, 400);
-		acceleration.y = 400;									//Setup gravity
+		acceleration.y = Reg.GRAVITY;									//Setup gravity
 		drag.x = maxVelocity.x * 10;
 		setGameScale();
 		
@@ -84,7 +88,25 @@ class Player extends FlxSprite
 		_ammoText.color = 0xFFFFFF;
 		_ammoText.alpha = 0.5;
 		_ammoText.antialiasing = false;
+		
+		makeWeapon();
 		//FlxG.state.add(_ammoText);
+	}
+	
+	function makeWeapon() 
+	{
+		_rifle = new FlxWeapon("rifle", this);
+			
+			//	Tell the weapon to create 100 bullets using a 2x2 white pixel bullet
+			_rifle.makePixelBullet(100, 1, 1, 0xffEEEEEE, 13, 12);
+			//	Bullets will move at 120px/sec
+			_rifle.setBulletSpeed(256);
+			//	But bullets will have gravity pulling them down to earth at a rate of 60px/sec
+			_rifle.setBulletGravity(0, 0);
+			//	As we use the mouse to fire we need to limit how many bullets are shot at once (1 every 50ms)
+			_rifle.setFireRate(200);
+			
+			FlxG.state.add(_rifle.group);
 	}
 	public function setGameScale():Void {
 		scale.set(0.5, 0.75);
@@ -110,9 +132,18 @@ class Player extends FlxSprite
 		
 		checkAnimation();
 		if (_flashLightEquipped)
-			_flashLight.setPosition(this.x+FLASHLIGHT_X-(_flashLight.facing==FlxObject.LEFT?_flashLight.width:0), this.y+FLASHLIGHT_Y);
-		//syncText();												//Sets ammo indicator position
+			_flashLight.setPosition(this.x + FLASHLIGHT_X - (_flashLight.facing == FlxObject.LEFT?_flashLight.width:0), this.y + FLASHLIGHT_Y);
+		//syncText();
+		//Sets ammo indicator position
+		
+		if (FlxG.keys.pressed.SPACE&&FlxG.game.ticks >=_rifle.nextFire)
+			{
+				FlxG.log.add("Fired bullet");
+				_rifle.fireFromAngle(facing == FlxObject.LEFT?FlxWeapon.BULLET_LEFT:FlxWeapon.BULLET_RIGHT);
+				FlxG.sound.play(FileReg.sndWRifle);
+			}
 		super.update();
+		
 		
 		
 	}
@@ -154,9 +185,23 @@ class Player extends FlxSprite
 		if (_left || _right) {
 			acceleration.x = maxVelocity.x * 5*(_left?-1:1);			//Create x movement
 		}
-		if (_up && isTouching(FlxObject.FLOOR)) {
-			velocity.y = -maxVelocity.y / 2;	
+		if(_up){
+			if (!_onLadder) {
+				if(isTouching(FlxObject.FLOOR)){
+					velocity.y = -maxVelocity.y / 3;
+					FlxG.log.add("player jumped");
+				}
+			}else {
+				velocity.y = maxVelocity.x*-1;
+			}
+		}else if (_down) {
+			if (_onLadder)
+				velocity.y = maxVelocity.x;
+		}else {
+			if (_onLadder)
+				velocity.y = 0;
 		}
+		
 	}
 
 	//Sets ammo indicator position

@@ -8,6 +8,7 @@ class FileReg
 {
 	//Directory paths (add more for subdirs)//
 	private static inline var sndPath:String = "assets/sounds/";
+	private static inline var sndMonsterPath:String = "assets/sounds/monster/";
 	private static inline var dataPath:String = "assets/data/";
 	private static inline var imgPath:String = "assets/images/";
 	private static inline var imgCharPath:String = imgPath+"character/";
@@ -25,18 +26,26 @@ class FileReg
 	public static inline var sndSelect:String = sndPath + "select.wav";
 	public static inline var sndStep:String = sndPath + "step.wav";
 	public static inline var sndWin:String = sndPath + "win.wav";
+	public static inline var sndMPain1:String = sndMonsterPath + "pain1.wav";
+	public static inline var sndMPain2:String = sndMonsterPath + "pain2.wav";
+	public static inline var sndMDeath1:String = sndMonsterPath + "death1.wav";
+	public static inline var sndWRifle:String = sndPath+"weapon/" + "cg1.wav";
 	//IMAGES//
 	public static inline var imgButton:String = imgPath + "button.png";
 	public static inline var imgDecal:String = imgPath + "decaltiles.png";
 	public static inline var imgGibs:String = imgPath + "gibs.png";
+	public static inline var imgMGibs:String = imgPath + "mgibs.png";
 	public static inline var imgFlashlight:String = imgCharPath + "flashlight.png";
 	public static inline var imgPlayer:String = imgCharPath + "player_female.png";
 
+	public static inline var imgEnemies:String = imgCharPath + "enemies.png";
+	public static inline var imgZombie:String = imgCharPath + "zombie.png";
 	public static inline var imgPlayerMale:String = imgCharPath + "player_male.png";
 	public static inline var imgPlayerNeutral:String = imgCharPath + "player_helmet.png";
 	//public static inline var imgTiles:String = imgPath + "tiles.png";
 	public static inline var imgLight:String = imgMapPath + "light.png";
 	public static inline var imgDoor:String = imgEntPath + "door.png";
+	public static inline var imgElevator:String = imgEntPath + "elevator.png";
 	public static inline var imgEntButton:String = imgEntPath + "button.png";
 	public static inline var imgSlider:String = uiPath + "slider.png";
 	public static inline var imgSliderBG:String = uiPath + "slider_bg.png";
