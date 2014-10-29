@@ -46,6 +46,7 @@ class FileReg
 
 	public static inline var imgEnemies:String = imgCharPath + "enemies.png";
 	public static inline var imgZombie:String = imgCharPath + "zombie.png";
+	public static inline var imgSkeleton:String = imgCharPath + "skeleton.png";
 	public static inline var imgPlayerMale:String = imgCharPath + "player_male.png";
 	public static inline var imgPlayerNeutral:String = imgCharPath + "player_helmet.png";
 	//public static inline var imgTiles:String = imgPath + "tiles.png";

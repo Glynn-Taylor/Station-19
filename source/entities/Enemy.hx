@@ -8,6 +8,7 @@ import flixel.tile.FlxTilemap;
 import flixel.util.FlxPoint;
 import flixel.util.FlxRandom;
 import flixel.util.FlxSpriteUtil;
+import flixel.util.FlxTimer;
 import player.Player;
 import util.FileReg;
 
@@ -22,13 +23,21 @@ class Enemy extends FlxSprite
 	private var _trackingText:FlxText;
 	private var _player:Player;
 	private var _trackingPlayer:Bool = false;
+	private var _unkillable:Bool = false;
+	private var _healthy:Bool = true;
+	private var _canAttack:Bool = true;
 	private var _lastSeen:Int;
+	private var _damage:Float = 10;
 	private static inline var BUMPER_LENGTH = 80;
 	private static inline var IGNORE_MS:Int = 3500;
+	private var MAX_HEALTH:Float;
 	
-	public function new(xPosition:Float, yPosition:Float, hp:Float):Void {
+	public function new(xPosition:Float, yPosition:Float, hp:Float, killable:Bool):Void {
 		super(xPosition, yPosition);
+		_unkillable = !killable;
 		health = hp;
+		MAX_HEALTH = hp;
+	
 		_frontBumper = new FlxSprite(x, y);
 		_frontBumper.makeGraphic(BUMPER_LENGTH, 5, 0x00000000, false);
 		_trackingText = new FlxText(x, y, 10, "", 8, true);
@@ -61,6 +70,7 @@ class Enemy extends FlxSprite
 	
 	override public function hurt(Damage:Float):Void 
 	{
+		if(_healthy){
 		// remember, right means facing left
 		if (facing == FlxObject.RIGHT) 
 		{
@@ -76,23 +86,49 @@ class Enemy extends FlxSprite
 		FlxSpriteUtil.flicker(this, 0.5);
 		FlxG.sound.play(FlxRandom.chanceRoll()?FileReg.sndMPain1:FileReg.sndMPain2, 1, false);
 		super.hurt(Damage);
+		}
 	}
 	
 	override public function kill():Void 
 	{
-		if (!alive) 
-		{ 
-			return; 
-		}
+		if(!_unkillable){
+			if (!alive) 
+			{ 
+				return; 
+			}
 		
-		if (_gibs != null)
-		{
-			_gibs.at(this);
-			_gibs.start(true, 2.80);
-			FlxG.sound.play(FileReg.sndMDeath1, 1, false);
+			if (_gibs != null)
+			{	
+				_gibs.at(this);
+				_gibs.start(true, 2.80);
+				FlxG.sound.play(FileReg.sndMDeath1, 1, false);
+			}
+			_frontBumper.kill();
+			_trackingText.kill();
+			super.kill();
+		}else {
+			animation.play("recovering");
+			health = MAX_HEALTH;
+			_healthy = false;
+			standDown();
+			new FlxTimer(3, setHealthy, 1);
 		}
-		_frontBumper.kill();
-		_trackingText.kill();
-		super.kill();
+	}
+	private function setHealthy(timer:FlxTimer) {
+		_healthy = true;
+		animation.play("move");
+	}
+	private function setDamage(amount:Float) {
+		_damage = amount;
+	}
+	
+	public function attackPlayer(player:Player) {
+		if (_trackingPlayer&&_canAttack) {
+				animation.play("attack");
+				_canAttack = false;
+				new FlxTimer(1.5, function(_) { _canAttack = true; }, 1);
+				new FlxTimer(1, function(_) { animation.play("move"); }, 1);
+				player.hurt(_damage);
+		}
 	}
 }

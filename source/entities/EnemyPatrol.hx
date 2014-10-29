@@ -11,19 +11,22 @@ class EnemyPatrol extends Enemy{
 	public var directionX:Float;
 	private var speedX:Float;
 
-	public function new(xPosition:Float, yPosition:Float, sX:Float,gibs:FlxEmitter):Void {
-		super(xPosition, yPosition,100);
+	public function new(xPosition:Float, yPosition:Float, sX:Float,gibs:FlxEmitter, sprite:String, killable:Bool):Void {
+		super(xPosition, yPosition,100,killable);
 		directionX = -1;
 		speedX = sX;
 		_gibs = gibs;
-		loadGraphic(FileReg.imgZombie,true,21,32,true);
+		loadGraphic(sprite,true,21,32,true);
 		animation.add("move",[0,1,2], Std.int(speedX/4)); // Use speed to set playback speed. Std.int() converts Float to Int needed by addAnimation
 		animation.play("move");
 		setFacingFlip(FlxObject.LEFT, false, false);			//Assign flipping of animation based on "facing" variable
 		setFacingFlip(FlxObject.RIGHT, true, false);
+		offset.x = 3;
+		width = 15;
 	}
 
 	override public function update():Void {
+		if(_healthy){
 		if (_trackingPlayer) {
 				if (_player.x < x)
 			{
@@ -64,6 +67,7 @@ class EnemyPatrol extends Enemy{
 		}
 		
 		velocity.x = speedX * directionX;
+		}
 		super.update();
 
 	}

@@ -88,11 +88,12 @@ class Player extends FlxSprite
 		setGameScale();
 		
 		//Bounding box
-		width = 16;
+		width = 14;
 		height = 24;
-		//offset.x = 8;
-		//offset.y = 16;
-		centerOffsets();
+		offset.x = 8;
+		offset.y = 5;
+		
+		//centerOffsets();
 		//Sounds
 		_sndStep = FlxG.sound.load(FileReg.sndStep, 0.5, false);
 		_sndFire = FlxG.sound.load(FileReg.sndFire, 1, false);

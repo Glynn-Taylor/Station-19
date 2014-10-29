@@ -188,6 +188,7 @@ class PlayState extends FlxState
 		FlxG.overlap( _useableEnt, _player, useEnt);
 		FlxG.overlap( _grpTrigger,_player, triggerTrig);
 		FlxG.overlap(_player._rifle.group, _grpEnemies, hurtEnemy);
+		FlxG.overlap(_player, _grpEnemies, hurtPlayer);
 		
 		FlxG.collide(_gibs, _mTiles);					//Check gibs vs walls collision
 		FlxG.collide(_mGibs, _mTiles);
@@ -219,22 +220,21 @@ class PlayState extends FlxState
 	//Get all of the spawn positions from the oel
 	private function createEntities(entityName:String, entityData:Xml):Void
 	{
+		var x:Int = Std.parseInt(entityData.get("x"));
+		var y:Int = Std.parseInt(entityData.get("y"));
 		if (entityName == "spawn_player")						//If a spawn position
 		{
 			if(_player==null){
 				_player = new Player(FlxG.width / 2 - 5, 30,"");	//Position changed on next line, stores pID and colour
 				//_player.dirty = true;
 			}
-			var x:Int = Std.parseInt(entityData.get("x"));
-			var y:Int = Std.parseInt(entityData.get("y"));
+		
 			_player.setPosition(x, y);
 			add(_player);
 		}
 		else if (entityName == "ent_light")						//If a spawn position
 		{
 		
-			var x:Int = Std.parseInt(entityData.get("x"));
-			var y:Int = Std.parseInt(entityData.get("y"));
 			var _light:Light = new Light(x, y,darkness, Std.parseFloat(entityData.get("Scale")));
 			_light.color=(Std.parseInt("0x"+entityData.get("Color").substring(1)));
 			//_light.color = Std.parseInt(entityData.get("Color"));
@@ -242,9 +242,6 @@ class PlayState extends FlxState
 		}
 		else if (entityName == "ent_door")						//If a spawn position
 		{
-		
-			var x:Int = Std.parseInt(entityData.get("x"));
-			var y:Int = Std.parseInt(entityData.get("y"));
 			//var _light:Light = new Light(x, y,darkness, Std.parseFloat(entityData.get("Scale")));
 			var _door:Door = new Door(x, y);
 			_triggerMap.set(Std.parseInt(entityData.get("door_id")),_door);
@@ -253,8 +250,6 @@ class PlayState extends FlxState
 		}
 		else if (entityName == "ent_elevator")						//If a spawn position
 		{
-			var x:Int = Std.parseInt(entityData.get("x"));
-			var y:Int = Std.parseInt(entityData.get("y"));
 			var p1:FlxPoint=null;
 			var p2:FlxPoint=null;
 			for ( child in entityData.elementsNamed("node") ) {
@@ -271,9 +266,6 @@ class PlayState extends FlxState
 		}
 		else if (entityName == "ent_button")						//If a spawn position
 		{
-		
-			var x:Int = Std.parseInt(entityData.get("x"));
-			var y:Int = Std.parseInt(entityData.get("y"));
 			//var _light:Light = new Light(x, y,darkness, Std.parseFloat(entityData.get("Scale")));
 			var _btn:Button = new Button(x, y,Std.parseInt(entityData.get("button_id")));
 			_useableEnt.add(_btn);
@@ -281,9 +273,6 @@ class PlayState extends FlxState
 		}
 		else if (entityName == "ent_chest")						//If a spawn position
 		{
-		
-			var x:Int = Std.parseInt(entityData.get("x"));
-			var y:Int = Std.parseInt(entityData.get("y"));
 			//var _light:Light = new Light(x, y,darkness, Std.parseFloat(entityData.get("Scale")));
 			var _chest:Chest = new Chest(x, y,Std.parseInt(entityData.get("ammo")));
 			_useableEnt.add(_chest);
@@ -291,18 +280,12 @@ class PlayState extends FlxState
 		}
 		else if (entityName == "ent_hiding")						//If a spawn position
 		{
-		
-			var x:Int = Std.parseInt(entityData.get("x"));
-			var y:Int = Std.parseInt(entityData.get("y"));
 			//var _light:Light = new Light(x, y,darkness, Std.parseFloat(entityData.get("Scale")));
 			var _hiding:Hiding= new Hiding(x, y);
 			_useableEnt.add(_hiding);
 		}
 		else if (entityName == "trigger_text")						//If a spawn position
 		{
-		
-			var x:Int = Std.parseInt(entityData.get("x"));
-			var y:Int = Std.parseInt(entityData.get("y"));
 			var w:Float = Std.parseFloat(entityData.get("width"));
 			var h:Float = Std.parseFloat(entityData.get("height"));
 			//var _light:Light = new Light(x, y,darkness, Std.parseFloat(entityData.get("Scale")));
@@ -312,9 +295,6 @@ class PlayState extends FlxState
 		}
 		else if (entityName == "trigger_ladder")						//If a spawn position
 		{
-		
-			var x:Int = Std.parseInt(entityData.get("x"));
-			var y:Int = Std.parseInt(entityData.get("y"));
 			var w:Float = Std.parseFloat(entityData.get("width"));
 			var h:Float = Std.parseFloat(entityData.get("height"));
 			//var _light:Light = new Light(x, y,darkness, Std.parseFloat(entityData.get("Scale")));
@@ -324,14 +304,19 @@ class PlayState extends FlxState
 		}
 		else if (entityName == "spawn_zombie")						//If a spawn position
 		{
-		
-			var x:Int = Std.parseInt(entityData.get("x"));
-			var y:Int = Std.parseInt(entityData.get("y"));
-			var _zomb:EnemyPatrol = new EnemyPatrol(x,y,20,_mGibs);
+			var _zomb:EnemyPatrol = new EnemyPatrol(x,y,20,_mGibs,FileReg.imgZombie,true);
 			_grpEnemies.add(_zomb);
+			_zomb.animation.add("attack", [3, 4, 5], 4, false);
 			FlxG.log.add("added enemy zombie");
 		}
-		
+		else if (entityName == "spawn_skeleton")						//If a spawn position
+		{
+			var _skele:EnemyPatrol = new EnemyPatrol(x,y,20,_mGibs,FileReg.imgSkeleton,false);
+			_grpEnemies.add(_skele);
+			_skele.animation.add("attack", [3, 4, 5], 4, false);
+			_skele.animation.add("recovering", [6, 7, 8], 4, false);
+			FlxG.log.add("added enemy skeleton");
+		}
 	}
 	//Updates the angle of the arrow after bounce (does not change bounding box/velocity just graphical)
 	private function useEnt(ent:FlxObject, player:FlxObject):Void
@@ -356,6 +341,11 @@ class PlayState extends FlxState
 			cast(enemy, Enemy).standDown();
 		FlxG.log.add("hit enemy with bullet");
 		bullet.kill();
+	}
+	private function hurtPlayer(player:FlxObject, enemy:FlxObject):Void
+	{
+		cast(enemy, Enemy).attackPlayer(_player);
+		FlxG.log.add("player got hit");
 	}
 	private function destroyBullet(bullet:FlxObject, world:FlxObject):Void
 	{
