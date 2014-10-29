@@ -145,13 +145,13 @@ class Player extends FlxSprite
 	{
 		//_gamepad =FlxG.gamepads.getByID(_padID);				//Get pad
 		acceleration.x = 0;
+		if(!_isHidden){
+			keyboardMovement();
+			keyboardButtons();
 		
-		keyboardMovement();
-		keyboardButtons();
-		
-		updateAxis(GamepadIDs.LEFT_ANALOGUE_X, GamepadIDs.LEFT_ANALOGUE_Y);	//Movement and animation
-		updateButtons();										//Jumping and firing
-		
+			updateAxis(GamepadIDs.LEFT_ANALOGUE_X, GamepadIDs.LEFT_ANALOGUE_Y);	//Movement and animation
+			updateButtons();										//Jumping and firing
+		}
 		checkAnimation();
 		if (_flashLightEquipped){
 			_flashLight.setPosition(this.x + FLASHLIGHT_X - (_flashLight.facing == FlxObject.LEFT?_flashLight.width:0), this.y + FLASHLIGHT_Y);
@@ -351,14 +351,14 @@ class Player extends FlxSprite
 	//On death of player destroy UI too
 	override public function kill():Void 
 	{
-		trace("am ded");
 		_ammoText.kill();
 		super.kill();
 	}
-	//Catch arrow (ammo++)
-	public function restoreArrow():Void {
-		_numArrows += 1;
-		_ammoText.text += "|";
+	//(ammo++)
+	public function addAmmo(amount:Int):Void {
+		_ammoOutOfClip += amount;
+		FlxG.log.add("gained " + Std.string(amount) + " ammo");
+		updateAmmoText();
 	}
 	//Convert radians to degrees
 	public inline static function radToDeg(rad:Float):Float
@@ -432,5 +432,10 @@ class Player extends FlxSprite
 		healthIcon.loadGraphic(FileReg.uiHealthIcon, false, 14, 14, false);
 		healthIcon.scrollFactor.set(0, 0);
 		grp.add(healthIcon);
+	}
+	
+	public function forceLightOff() 
+	{
+		_flashLight.visible = false;
 	}
 }

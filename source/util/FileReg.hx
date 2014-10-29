@@ -53,6 +53,8 @@ class FileReg
 	public static inline var imgDoor:String = imgEntPath + "door.png";
 	public static inline var imgElevator:String = imgEntPath + "elevator.png";
 	public static inline var imgEntButton:String = imgEntPath + "button.png";
+	public static inline var imgChest:String = imgEntPath + "chest.png";
+	public static inline var imgCupboard:String = imgEntPath + "cupboard.png";
 	public static inline var imgSlider:String = uiPath + "slider.png";
 	public static inline var imgSliderBG:String = uiPath + "slider_bg.png";
 	//MAP//

@@ -1,9 +1,11 @@
 package state ; 
 import entities.Button;
+import entities.Chest;
 import entities.Door;
 import entities.Elevator;
 import entities.Enemy;
 import entities.EnemyPatrol;
+import entities.Hiding;
 import entities.Light;
 import entities.Triggerable;
 import entities.TriggerLadder;
@@ -33,7 +35,6 @@ import openfl.Assets;
 import openfl.geom.Point;
 import openfl.Lib;
 import openfl.display.BlendMode;
-import player.Arrow;
 import player.Player;
 import player.TextDisplay;
 import util.FileReg;
@@ -278,6 +279,25 @@ class PlayState extends FlxState
 			_useableEnt.add(_btn);
 			FlxG.log.add("added button");
 		}
+		else if (entityName == "ent_chest")						//If a spawn position
+		{
+		
+			var x:Int = Std.parseInt(entityData.get("x"));
+			var y:Int = Std.parseInt(entityData.get("y"));
+			//var _light:Light = new Light(x, y,darkness, Std.parseFloat(entityData.get("Scale")));
+			var _chest:Chest = new Chest(x, y,Std.parseInt(entityData.get("ammo")));
+			_useableEnt.add(_chest);
+			FlxG.log.add("added chest with ammo: " +entityData.get("ammo"));
+		}
+		else if (entityName == "ent_hiding")						//If a spawn position
+		{
+		
+			var x:Int = Std.parseInt(entityData.get("x"));
+			var y:Int = Std.parseInt(entityData.get("y"));
+			//var _light:Light = new Light(x, y,darkness, Std.parseFloat(entityData.get("Scale")));
+			var _hiding:Hiding= new Hiding(x, y);
+			_useableEnt.add(_hiding);
+		}
 		else if (entityName == "trigger_text")						//If a spawn position
 		{
 		
@@ -341,25 +361,7 @@ class PlayState extends FlxState
 	{
 		bullet.kill();
 	}
-	//Resolves arrows hits (arrow <-> player)
-	private function arrowHit(arw:FlxObject, person:FlxObject):Void
-	{
-		var sArw:Arrow = cast(arw, Arrow);
-		var sPerson:Player = cast(person, Player);
-		
-		if (sPerson.color != sArw.color) {				//If arrow not owned by player
-			_gibs.at(sPerson);								//Set emitter location
-			_gibs.start(true, 2.80);						//Emit
-			sPerson.kill();									//Set player not alive (non rendered and non active)
-			_sndHit.play();								//Play sound
-		}else {												//If arrow owned by player (color set on firing (also allows for teams))
-			if(sArw._canPickup){							//If arrow is not fresh (to prevent pickup on fire)
-			sPerson.restoreArrow();							//Increment player ammo
-			sArw.kill();									//Set arrow not alive (non rendered and non active)
-			_sndPickup.play();								//Play sound
-			}
-		}
-	}
+	
 	//Cleanup
 	override public function destroy():Void 
 	{
