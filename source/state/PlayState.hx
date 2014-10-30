@@ -74,6 +74,8 @@ class PlayState extends FlxState
 	private var _sndPickup:FlxSound;
 	private var _victoryString:String = "";				//Temp store for victory string to enable pause before state transistion
 	private var _triggerMap:Map<Int,Triggerable> = new Map<Int,Triggerable>();
+	private var _creepyMusic:FlxSound;
+	private var CREEPY_MUSIC:Array<String> = [FileReg.mscCreepy1];
 	//UI//
 	private var _textDisplay:TextDisplay;
 	private var guiCamera:FlxCamera;
@@ -164,15 +166,15 @@ class PlayState extends FlxState
 		//FlxG.camera.follow(_player, FlxCamera.STYLE_LOCKON,null,0);
 		var zoomCam:ZoomCamera = new ZoomCamera();
 		FlxG.cameras.reset( zoomCam);
-		zoomCam.targetZoom = 2;
+		zoomCam.targetZoom = 1.75;
 		FlxG.camera.follow(_player, FlxCamera.STYLE_LOCKON, null, 0);
 		
-		 guiCamera = new FlxCamera(0, 0, 480, 320, 1.0);
+		 guiCamera = new FlxCamera(0, 0, 400, 300, 1.0);
 		FlxG.cameras.add(guiCamera);
 		var _gui:FlxUIGroup = new FlxUIGroup();
 		
 		_player.addUI(_gui);
-		_textDisplay = new TextDisplay(380 , 0, 100,8);
+		_textDisplay = new TextDisplay(300 , 0, 100,8);
 		_gui.add(_textDisplay);
 		
 		add(_gui);
@@ -181,6 +183,7 @@ class PlayState extends FlxState
 		FlxCamera.defaultCameras.remove(guiCamera);
 		//FlxG.cameras.remove(guiCamera, true);
 		new FlxTimer(3, randomGroan, 0);
+		new FlxTimer(30, checkMusic, 0);
 		super.create();
 	}
 	
@@ -240,6 +243,7 @@ class PlayState extends FlxState
 				_player = new Player(FlxG.width / 2 - 5, 30,"");	//Position changed on next line, stores pID and colour
 				//_player.dirty = true;
 			}
+			_player.reset(x, y);
 			_player.velocity.set(0, 0);
 			_player.setPosition(x, y);
 			add(_player);
@@ -383,6 +387,15 @@ class PlayState extends FlxState
 			FlxG.sound.play(FileReg.sndMGroan).proximity(enemy.x, enemy.y, _player, 160);
 			break;
 		}
+		}
+	}
+	private function checkMusic(timer:FlxTimer) {
+		if (_creepyMusic != null) {
+			if (!_creepyMusic.playing) {
+				_creepyMusic = FlxG.sound.play(CREEPY_MUSIC[FlxRandom.intRanged(0, CREEPY_MUSIC.length - 1)], 0.5, false);
+			}
+		}else {
+			_creepyMusic = FlxG.sound.play(CREEPY_MUSIC[FlxRandom.intRanged(0, CREEPY_MUSIC.length - 1)], 0.5, false);
 		}
 	}
 	private function changeLevel(a:FlxObject, b:FlxObject):Void

@@ -27,7 +27,7 @@ class Light extends FlxSprite {
       var screenXY:FlxPoint = getScreenXY();
 	  // blend = "screen";
 	  try{
-      darkness.stamp(this,
+		darkness.stamp(this,
                     Math.floor(screenXY.x - this.width / 2),
                   Math.floor(screenXY.y - this.height / 2));
 	  }catch (e:String) {
@@ -36,4 +36,5 @@ class Light extends FlxSprite {
 	  }
 	  // blend = "overlay";
     }
+
 }

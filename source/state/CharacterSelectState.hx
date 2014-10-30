@@ -59,7 +59,7 @@ class CharacterSelectState extends FlxState
 	{
 		FlxG.mouse.visible = true;
 		bgColor = 0xFF000000;
-		_player = new Player(FlxG.width / 2, 45,hairStyles[0]);
+		_player = new Player(FlxG.width / 2, 45,Reg.playerPixels==null?hairStyles[0]:"");
 		_player.scale.x = _player.scale.y=4;
 		_player.x -= _player.width / 2;
 		_player.moves = false;

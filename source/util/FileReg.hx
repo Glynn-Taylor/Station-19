@@ -19,6 +19,7 @@ class FileReg
 	//MUSIC//
 	public static inline var mscBG:String = mscPath + #if (flash) "bg1.mp3" #else "bg1.ogg" #end;
 	public static inline var mscBG2:String = mscPath + #if (flash) "bg2.mp3" #else "bg2.ogg" #end;
+	public static inline var mscCreepy1:String = mscPath + #if (flash) "creepy1.mp3" #else "creepy1.ogg" #end;
 	//SOUNDS//
 	public static inline var sndHit:String = sndPath + "hit.wav";
 	public static inline var sndFire:String = sndPath + "fire.wav";

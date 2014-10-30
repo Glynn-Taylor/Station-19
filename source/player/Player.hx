@@ -88,7 +88,7 @@ class Player extends FlxSprite
 		if(Reg.playerPixels==null||graphic!="")
 			loadGraphic(graphic, true, 32, 32);	//Load sprite
 		else
-			loadGraphic(Reg.playerPixels, true, 32, 32);
+			loadGraphic(Reg.playerPixels.clone(), true, 32, 32);
 		
 		createAnimations();
 		maxVelocity.set(80, 400);
