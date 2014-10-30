@@ -79,6 +79,7 @@ class PlayState extends FlxState
 	//UI//
 	private var _textDisplay:TextDisplay;
 	private var guiCamera:FlxCamera;
+	var _gui:FlxUIGroup;
 	
 	public function new() 
 	{
@@ -174,7 +175,7 @@ class PlayState extends FlxState
 		 guiCamera.bgColor = 0x00000000;
 		FlxG.cameras.add(guiCamera);
 		
-		var _gui:FlxUIGroup = new FlxUIGroup();
+		_gui= new FlxUIGroup();
 		
 		_player.addUI(_gui);
 		_textDisplay = new TextDisplay(300 , 0, 100,8);
@@ -516,7 +517,7 @@ class PlayState extends FlxState
 		 guiCamera.bgColor = 0x00000000;
 		FlxG.cameras.add(guiCamera);
 		
-		var _gui:FlxUIGroup = new FlxUIGroup();
+		_gui = new FlxUIGroup();
 		
 		_player.addUI(_gui);
 		_textDisplay = new TextDisplay(300 , 0, 100,8);
@@ -536,7 +537,7 @@ class PlayState extends FlxState
 	//Cleanup
 	override public function destroy():Void 
 	{
-		super.destroy();
+		_player.cleanup();
 		/*_map = null;
 		_mTiles = FlxDestroyUtil.destroy(_mTiles);
 		_mWalls= FlxDestroyUtil.destroy(_mWalls);

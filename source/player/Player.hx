@@ -542,4 +542,9 @@ class Player extends FlxSprite
 		health = 100;
 		_lights = null;
 	}
+	public function cleanup() {
+		_flashlightBar = null;
+		_healthBar = null;
+		_ammoText = null;
+	}
 }

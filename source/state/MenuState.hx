@@ -177,14 +177,14 @@ class MenuState extends FlxState
 	private function clickCredits():Void
 	{
 		FlxG.camera.fade(FlxColor.BLACK,.33, false,function() {		//Fade out
-			FlxG.switchState(new InfoState("Credits","Programming: Glynn Taylor\nArt/Music: OpenGameArt (multiple)\nVicky Hedgecock: Player sprite\nPatrick Crecelius: BG music\n Framework: HaxeFlixel"));
+			FlxG.switchState(new InfoState("Credits","Programming: Glynn Taylor\nArt/Music: OpenGameArt (multiple)\nFreesound(multiple)\nsee assets for attribution lists"));
 		});
 	}
 	//Handles "controls" button click
 	private function clickControls():Void
 	{
 		FlxG.camera.fade(FlxColor.BLACK,.33, false,function() {		//Fade out
-			FlxG.switchState(new InfoState("Controls","Thumbstick: Look+move\nA: Jump\nX: Fire"));
+			FlxG.switchState(new InfoState("Controls","Move: AWD\nFire: Space\nUse: E"));
 		});
 	}
 	//Handles "quit" button click
