@@ -59,6 +59,7 @@ class Player extends FlxSprite
 	private var _lightLevel:Float = 100;
 	private var _lights:FlxTypedGroup<Light>;
 	private var _inLight:Bool = true;
+	private var _flashLightClear = false;
 	//Sound vars
 	private var _sndStep:FlxSound;
 	private var _sndFire:FlxSound;
@@ -184,6 +185,10 @@ class Player extends FlxSprite
 	override public function update():Void 
 	{
 		//_gamepad =FlxG.gamepads.getByID(_padID);				//Get pad
+		if (_flashLightClear) {
+			_flashLight.clear();
+			_flashLightClear = false;
+		}
 		acceleration.x = 0;
 		if(!_isHidden){
 			keyboardMovement();
@@ -199,8 +204,10 @@ class Player extends FlxSprite
 		//Sets ammo indicator position
 		if (_flashLight.visible) {
 			_flashLightEnergy -= FLASHLIGHT_RATE;
-			if (_flashLightEnergy < 1)
+			if (_flashLightEnergy < 1){
 				_flashLight.visible = false;
+				_flashLightClear = true;
+			}
 		}else {
 			if (_flashLightEnergy < 100)
 				_flashLightEnergy += FLASHLIGHT_RATE;
@@ -269,7 +276,7 @@ class Player extends FlxSprite
 	{
 		var diff:Int = MAX_AMMO_IN_CLIP -_ammoInClip;
 		_ammoInClip = _ammoOutOfClip>MAX_AMMO_IN_CLIP?MAX_AMMO_IN_CLIP:_ammoOutOfClip;
-		_ammoOutOfClip -= diff;
+		_ammoOutOfClip -= diff>_ammoOutOfClip?_ammoOutOfClip:diff;
 		_reloading = false;
 		updateAmmoText();
 	}
@@ -304,8 +311,9 @@ class Player extends FlxSprite
 				_canToggle = false;
 				FlxG.sound.play(FileReg.sndToggle, 1, false);
 				_flashLight.visible = !_flashLight.visible;
-				_flashLight.clear();
+				
 				new FlxTimer(0.3, allowToggle, 1);
+				_flashLightClear = true;
 			}
 		}
 		if (FlxG.keys.pressed.R )
@@ -440,6 +448,7 @@ class Player extends FlxSprite
 		//_ammoText.kill();
 		super.kill();
 		FlxG.camera.fade(FlxColor.BLACK, .66, false, function() {
+			FlxG.log.add("player dead, swapping to end screen");
 			FlxG.switchState(new EndGameState("You died.."));
 		});
 	}
@@ -526,6 +535,7 @@ class Player extends FlxSprite
 	public function forceLightOff() 
 	{
 		_flashLight.visible = false;
+		_flashLightClear = true;
 	}
 	public function clean() {
 		forceLightOff(); 

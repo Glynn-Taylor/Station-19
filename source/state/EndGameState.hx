@@ -33,12 +33,15 @@ class EndGameState extends FlxState
 	//Constructor
 	public function new(text:String) 
 	{
-		super();
+		FlxG.log.add("end game screen constructor");
 		_text = text;
+		super();
+		
 	}
 	//Initialisation
 	override public function create():Void 
 	{
+		FlxG.log.add("end game screen creation");
 		FlxG.mouse.visible = true;							//Ensure mouse visibility
 		bgColor = 0x000000;									//Ensure BG color
 		//UI Creation//

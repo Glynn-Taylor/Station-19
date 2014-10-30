@@ -170,7 +170,8 @@ class PlayState extends FlxState
 		FlxG.camera.follow(_player, FlxCamera.STYLE_LOCKON, null, 0);
 		
 		 guiCamera = new FlxCamera(0, 0, 400, 300, 1.0);
-		FlxG.cameras.add(guiCamera);
+		 #if (flash) FlxG.cameras.add(guiCamera); #end
+		
 		var _gui:FlxUIGroup = new FlxUIGroup();
 		
 		_player.addUI(_gui);
@@ -180,7 +181,10 @@ class PlayState extends FlxState
 		add(_gui);
 		_gui.cameras = new Array<FlxCamera>();
 		_gui.cameras.push(guiCamera);
-		FlxCamera.defaultCameras.remove(guiCamera);
+		//FlxCamera.defaultCameras.remove(guiCamera);
+		//FlxG.cameras.add(guiCamera);
+		 #if (flash) FlxCamera.defaultCameras.remove(guiCamera); #end
+		cast(FlxG.game, GFlxGame).GOnResize();
 		//FlxG.cameras.remove(guiCamera, true);
 		new FlxTimer(3, randomGroan, 0);
 		new FlxTimer(30, checkMusic, 0);
@@ -215,6 +219,9 @@ class PlayState extends FlxState
 		}
 		if (FlxG.keys.pressed.TWO ) {
 			loadLevel(2);
+		}
+		if (FlxG.keys.pressed.THREE) {
+			loadLevel(3);
 		}
 		if (FlxG.keys.pressed.NINE) {
 			_player.kill();
@@ -348,7 +355,7 @@ class PlayState extends FlxState
 			_grpEnemies.add(_skele);
 			_skele.animation.add("attack", [3, 4, 5], 4, false);
 			_skele.animation.add("recovering", [6, 7, 8], 4, false);
-			_skele.setDamage(50);
+			_skele.setDamage(25);
 			FlxG.log.add("added enemy skeleton");
 		}
 	}
@@ -408,7 +415,7 @@ class PlayState extends FlxState
 	}
 	private function cleanGroups() {
 		
-		_mTiles = FlxDestroyUtil.destroy(_mTiles);
+		/*_mTiles = FlxDestroyUtil.destroy(_mTiles);
 		_mWalls= FlxDestroyUtil.destroy(_mWalls);
 		_mTilesBehind = FlxDestroyUtil.destroy(_mTilesBehind);
 		_mTilesInFront = FlxDestroyUtil.destroy(_mTilesInFront);
@@ -419,8 +426,12 @@ class PlayState extends FlxState
 		_grpLight=FlxDestroyUtil.destroy(_grpLight);
 		_grpLight = new FlxTypedGroup<Light>();
 		_grpTrigger=FlxDestroyUtil.destroy(_grpTrigger);
-		_grpTrigger = new FlxTypedGroup<Triggerable>();
-		_grpEnemies=FlxDestroyUtil.destroy(_grpEnemies);
+		_grpTrigger = new FlxTypedGroup<Triggerable>();*/
+		_solidEnt.clear();
+		_useableEnt.clear();
+		_grpLight.clear();
+		_grpTrigger.clear();
+		//_grpEnemies=FlxDestroyUtil.destroy(_grpEnemies);
 		_grpEnemies = new FlxTypedGroup<Enemy>();
 		_triggerMap = new Map<Int,Triggerable>();
 		remove(_levelTrigger);
@@ -512,7 +523,7 @@ class PlayState extends FlxState
 	override public function destroy():Void 
 	{
 		super.destroy();
-		_map = null;
+		/*_map = null;
 		_mTiles = FlxDestroyUtil.destroy(_mTiles);
 		_mWalls= FlxDestroyUtil.destroy(_mWalls);
 		_mTilesBehind = FlxDestroyUtil.destroy(_mTilesBehind);
@@ -522,7 +533,7 @@ class PlayState extends FlxState
 		_sndHit= FlxDestroyUtil.destroy(_sndHit);
 		_sndPickup= FlxDestroyUtil.destroy(_sndPickup);
 		_victoryString = null;	
-		FlxG.camera.zoom = 1;
+		FlxG.camera.zoom = 1;*/
 	}
 	
 }

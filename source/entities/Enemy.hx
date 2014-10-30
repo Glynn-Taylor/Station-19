@@ -27,7 +27,7 @@ class Enemy extends FlxSprite
 	private var _healthy:Bool = true;
 	private var _canAttack:Bool = true;
 	private var _lastSeen:Int;
-	private var _damage:Float = 10;
+	private var _damage:Float = 5;
 	private static inline var BUMPER_LENGTH = 80;
 	private static inline var IGNORE_MS:Int = 3500;
 	private var MAX_HEALTH:Float;
@@ -126,9 +126,9 @@ class Enemy extends FlxSprite
 		if (_trackingPlayer&&_canAttack&&_healthy) {
 				animation.play("attack");
 				_canAttack = false;
+				player.hurt(_damage);
 				new FlxTimer(1.5, function(_) { _canAttack = true; }, 1);
 				new FlxTimer(1, function(_) { animation.play("move"); }, 1);
-				player.hurt(_damage);
 				FlxG.sound.play(FileReg.sndPlayerHurt, 1, false);
 		}
 	}
