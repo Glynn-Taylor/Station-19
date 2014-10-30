@@ -125,7 +125,7 @@ class PlayState extends FlxState
 		_map.loadEntities(createEntities, "ent_behind");	//Create spawning positions
 		add(_mTiles);	
 		_player.createFlashLight(darkness);
-		
+		_player.trackLight(_grpLight);
 		//UTIL//
 		FlxG.mouse.visible = false;						//Hide Cursor
 		_sndHit = FlxG.sound.load(FileReg.sndHit);		//Load sound hit
@@ -178,6 +178,7 @@ class PlayState extends FlxState
 		_gui.cameras.push(guiCamera);
 		FlxCamera.defaultCameras.remove(guiCamera);
 		//FlxG.cameras.remove(guiCamera, true);
+		new FlxTimer(3, randomGroan, 0);
 		super.create();
 	}
 	
@@ -244,7 +245,9 @@ class PlayState extends FlxState
 		{
 			//var _light:Light = new Light(x, y,darkness, Std.parseFloat(entityData.get("Scale")));
 			var _door:Door = new Door(x, y);
-			_triggerMap.set(Std.parseInt(entityData.get("door_id")),_door);
+			if (_triggerMap.exists(Std.parseInt(entityData.get("door_id"))))
+				FlxG.log.add("DOOR ID CLASH: "+entityData.get("door_id"));
+			_triggerMap.set(Std.parseInt(entityData.get("door_id")), _door);
 			_solidEnt.add(_door);
 			FlxG.log.add("added door");
 		}
@@ -259,7 +262,9 @@ class PlayState extends FlxState
 					p2 = new FlxPoint(Std.parseInt(child.get("x")), Std.parseInt(child.get("y")));
 				}
 			}
-			var _ele:Elevator = new Elevator(x, y,p1,p2);
+			var _ele:Elevator = new Elevator(x, y, p1, p2);
+				if (_triggerMap.exists(Std.parseInt(entityData.get("elevator_id"))))
+				FlxG.log.add("ELEVATOR ID CLASH: "+entityData.get("elevator_id"));
 			_triggerMap.set(Std.parseInt(entityData.get("elevator_id")),_ele);
 			_solidEnt.add(_ele);
 			FlxG.log.add("added elevator");
@@ -315,6 +320,7 @@ class PlayState extends FlxState
 			_grpEnemies.add(_skele);
 			_skele.animation.add("attack", [3, 4, 5], 4, false);
 			_skele.animation.add("recovering", [6, 7, 8], 4, false);
+			_skele.setDamage(50);
 			FlxG.log.add("added enemy skeleton");
 		}
 	}
@@ -351,7 +357,14 @@ class PlayState extends FlxState
 	{
 		bullet.kill();
 	}
-	
+	private function randomGroan(timer:FlxTimer) {
+		for(enemy in _grpEnemies){
+		if (FlxRandom.intRanged(0, _grpEnemies.length - 1) == 0) {
+			FlxG.sound.play(FileReg.sndMGroan).proximity(enemy.x, enemy.y, _player, 160);
+			break;
+		}
+		}
+	}
 	//Cleanup
 	override public function destroy():Void 
 	{

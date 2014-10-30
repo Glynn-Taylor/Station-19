@@ -6,15 +6,18 @@ import flixel.addons.weapon.FlxWeapon;
 import flixel.FlxG;
 import flixel.FlxObject;
 import flixel.FlxSprite;
+import flixel.group.FlxTypedGroup;
 import flixel.input.gamepad.FlxGamepad;
 import flixel.input.keyboard.FlxKeyboard;
 import flixel.system.FlxSound;
 import flixel.text.FlxText;
+import flixel.tweens.FlxTween;
 import flixel.ui.FlxBar;
 import flixel.util.FlxAngle;
 import flixel.util.FlxColor;
 import flixel.util.FlxColorUtil;
 import flixel.util.FlxDestroyUtil;
+import flixel.util.FlxMath;
 import flixel.util.FlxPoint;
 import flixel.util.FlxTimer;
 import state.EndGameState;
@@ -53,6 +56,9 @@ class Player extends FlxSprite
 	private var _flashLightEnergy:Float = 100;
 	private var _ammoInClip:Int = 16;
 	private var _ammoOutOfClip:Int = 32;
+	private var _lightLevel:Float = 100;
+	private var _lights:FlxTypedGroup<Light>;
+	private var _inLight:Bool = true;
 	//Sound vars
 	private var _sndStep:FlxSound;
 	private var _sndFire:FlxSound;
@@ -69,8 +75,11 @@ class Player extends FlxSprite
 	private var _armorGreyscale:Array<Int> = [0xFFDADADA, 0xFFC3C3C3];
 	private var _skin:Array<Int> = [0xFFF6D5A4, 0xFFDE9462];
 	private var _skinGreyscale:Array<Int> = [0xFFFFFFFF, 0xFFD4D4D4];
-	
 	private var _skinSwatch:Array<Int> = [0xFFF6D5A4, 0xFFF6D5A4, 0xFFCFAC84, 0xFFCFA97A, 0xFFC29369, 0xFFBA8960, 0xFFB57D58, 0xFFBD815C, 0xFFAA7651, 0xFFA87445, 0xFF8E5B3C, 0xFF845239, 0xFF7E4E37, 0xFF6B4532, 0xFF67452C, 0xFF502F1E, 0xFF573C27, 0xFF31221B];
+	//Darkness//
+	private var _darknessMonster:FlxSprite;
+	private var _darknessTeleporting:Bool = false;
+	private var _darknessSound:FlxSound;
 	
 	//Constructor
 	public function new(X:Float=0, Y:Float=0,graphic:String) 
@@ -113,6 +122,15 @@ class Player extends FlxSprite
 		
 		makeWeapon();
 		health = 100;
+		
+		_darknessMonster = new FlxSprite( -50, 10);
+		_darknessMonster.loadGraphic(FileReg.imgDarkness, true, 24, 32, false);
+		_darknessMonster.animation.add("move", [0,1,2], 6, true);
+		_darknessMonster.animation.play("move");
+		_darknessMonster.alpha = 0;
+		_darknessSound = FlxG.sound.play(FileReg.sndMDarkness,1,true);
+		_darknessSound.volume = 0;
+		FlxG.state.add(_darknessMonster);
 		//FlxG.state.add(_ammoText);
 	}
 	
@@ -140,6 +158,26 @@ class Player extends FlxSprite
 		animation.add("d", [4, 4, 4, 4], 6, false);				//Assign frames to animation names
 		animation.add("lr", [8, 9, 10, 11, 12, 13, 14, 15], 12, false);
 		animation.add("u", [4, 4, 4, 4], 6, false);
+	}
+	public function trackLight(lights:FlxTypedGroup<Light>) {
+		_lights = lights;
+		new FlxTimer(0.5, checkLight, 0);	//Loop indef
+	}
+	private function checkLight(timer:FlxTimer) {
+		_inLight = false;
+		for (light in _lights) {
+			if (FlxMath.distanceBetween(this, light) < light.scale.x * 20) {
+				_inLight = true;
+				break;
+			}
+		}
+		if (_inLight){
+			_lightLevel = 100;
+			FlxTween.tween(_darknessMonster,{alpha: 0}, 0.5);
+			_darknessSound.volume = 0;
+			_darknessMonster.setPosition( -10, 50);
+		}
+		//FlxG.log.add("light level: " + Std.string(_lightLevel));
 	}
 	//Runs every frame
 	override public function update():Void 
@@ -169,7 +207,49 @@ class Player extends FlxSprite
 		}
 		_flashlightBar.percent = _flashLightEnergy;
 		_healthBar.percent = health;
+		
+		
+		if (!_inLight) {
+			_lightLevel -= 0.07;
+		}
+		if (_lightLevel < 80)
+			updateDarkness();
 		super.update();
+	}
+	
+	function updateDarkness() 
+	{
+		if (_flashLight.visible) {
+			if(!_darknessTeleporting)
+				if (_darknessMonster.x > x && facing == FlxObject.RIGHT) {
+					FlxTween.tween(_darknessMonster,{alpha: 0}, 1);
+					new FlxTimer(1, function(_) { _darknessTeleporting=false; }, 1);
+				}else if (_darknessMonster.x < x && facing == FlxObject.LEFT) {
+					FlxTween.tween(_darknessMonster,{alpha: 0}, 1);
+					new FlxTimer(1, function(_) { _darknessTeleporting=false; }, 1);
+				}else {
+					_darknessMonster.y = y;
+					if (FlxMath.distanceBetween(_darknessMonster, this) > _lightLevel)
+						_darknessMonster.x = x + (facing == FlxObject.LEFT?_lightLevel: -_lightLevel);
+					_darknessMonster.x +=	(facing == FlxObject.LEFT?0.1: -0.1);
+					_darknessMonster.alpha = 1 - _lightLevel / 100;
+					_darknessSound.volume = 1 - _lightLevel / 100;
+				}
+		}else {
+			if (!_darknessTeleporting) {
+				_darknessMonster.y = y;
+				if (FlxMath.distanceBetween(_darknessMonster, this) > _lightLevel)
+					_darknessMonster.x = x + (facing == FlxObject.LEFT?_lightLevel: -_lightLevel);
+				_darknessMonster.x +=	(facing == FlxObject.LEFT?0.1: -0.1);
+				_darknessMonster.alpha = 1 - _lightLevel / 100;
+				_darknessSound.volume = 1 - _lightLevel / 100;
+			}
+		}
+		
+		if (_darknessMonster.alpha > 0.8)
+		if (overlaps(_darknessMonster)) {
+			kill();
+		}
 	}
 	
 	function reload() {
@@ -186,8 +266,9 @@ class Player extends FlxSprite
 	}
 	function reloadWeapon(timer:FlxTimer) 
 	{
+		var diff:Int = MAX_AMMO_IN_CLIP -_ammoInClip;
 		_ammoInClip = _ammoOutOfClip>MAX_AMMO_IN_CLIP?MAX_AMMO_IN_CLIP:_ammoOutOfClip;
-		_ammoOutOfClip -= _ammoInClip;
+		_ammoOutOfClip -= diff;
 		_reloading = false;
 		updateAmmoText();
 	}
@@ -200,7 +281,7 @@ class Player extends FlxSprite
 	{
 		if(FlxG.keys.pressed.ESCAPE ){
 			FlxG.camera.fade(FlxColor.BLACK, .66, false, function() {	//Fade out
-				FlxG.switchState(new EndGameState("butts"));	//Switch state
+				FlxG.switchState(new EndGameState("Restart?"));	//Switch state
 			});
 		}
 		if (FlxG.keys.pressed.SPACE&&FlxG.game.ticks >=_rifle.nextFire)
@@ -354,6 +435,9 @@ class Player extends FlxSprite
 	{
 		_ammoText.kill();
 		super.kill();
+		FlxG.camera.fade(FlxColor.BLACK, .66, false, function() {
+			FlxG.switchState(new EndGameState("You died.."));
+		});
 	}
 	//(ammo++)
 	public function addAmmo(amount:Int):Void {

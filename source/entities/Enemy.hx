@@ -46,7 +46,7 @@ class Enemy extends FlxSprite
 		
 	}
 	public function checkBumper (player:Player, tiles:FlxTilemap):Void {
-		if (!_trackingPlayer && _frontBumper.overlaps(player)&&!player._isHidden) {
+		if (!_trackingPlayer && _frontBumper.overlaps(player)&&!player._isHidden&&_healthy) {
 			//---Raycasting broken for some reason---//
 			/*if(tiles.ray(new FlxPoint(_frontBumper.x,_frontBumper.y),new FlxPoint(_player.x,_frontBumper.y),8)){
 				alert(player);
@@ -118,17 +118,18 @@ class Enemy extends FlxSprite
 		_healthy = true;
 		animation.play("move");
 	}
-	private function setDamage(amount:Float) {
+	public function setDamage(amount:Float) {
 		_damage = amount;
 	}
 	
 	public function attackPlayer(player:Player) {
-		if (_trackingPlayer&&_canAttack) {
+		if (_trackingPlayer&&_canAttack&&_healthy) {
 				animation.play("attack");
 				_canAttack = false;
 				new FlxTimer(1.5, function(_) { _canAttack = true; }, 1);
 				new FlxTimer(1, function(_) { animation.play("move"); }, 1);
 				player.hurt(_damage);
+				FlxG.sound.play(FileReg.sndPlayerHurt, 1, false);
 		}
 	}
 }

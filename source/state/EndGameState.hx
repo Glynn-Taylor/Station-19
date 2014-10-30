@@ -1,5 +1,6 @@
 package state ;
 
+import flixel.effects.particles.FlxEmitter;
 import flixel.FlxG;
 import flixel.FlxSprite;
 import flixel.FlxState;
@@ -9,8 +10,11 @@ import flixel.ui.FlxButton;
 import flixel.util.FlxColor;
 import flixel.util.FlxDestroyUtil;
 import flixel.util.FlxSave;
+import flixel.util.FlxTimer;
 import player.Player;
+import util.FileReg;
 import util.GamepadIDs;
+import util.Reg;
 using flixel.util.FlxSpriteUtil;
 /**
  * ...
@@ -24,6 +28,8 @@ class EndGameState extends FlxState
 	private var _btnMainMenu:FlxButton;	// button to go to main menu
 	private var _btnRematch:FlxButton;
 	private var _text:String;
+	var playerSprite:FlxSprite;
+	var _mGibs:FlxEmitter;
 	//Constructor
 	public function new(text:String) 
 	{
@@ -47,10 +53,33 @@ class EndGameState extends FlxState
 		_txtTitle.antialiasing = false;
 		add(_txtTitle);
 		
-		_btnMainMenu = new FlxButton(0, FlxG.height - 32, "Main Menu (select)", goMainMenu);
+		playerSprite= new FlxSprite(32, 150);
+		playerSprite.loadGraphic(FileReg.imgPlayerNeutral, true, 32, 32);
+		playerSprite.animation.add("stand", [4], 6, false);	
+		playerSprite.animation.play("stand");
+		playerSprite.scale.set(2, 2);
+		playerSprite.screenCenter(true, false);
+		
+		add(playerSprite);
+		
+		_mGibs= new FlxEmitter();						//Create emitter for gibs
+		_mGibs.setXSpeed( -150, 150);					//Gib settings
+		_mGibs.setYSpeed( -200, 0);
+		_mGibs.acceleration.y = 400;						//Add gravity to gibs
+		_mGibs.setRotation( -720, 720);
+		_mGibs.makeParticles(FileReg.imgPGibs, 25, 16, true, .5);	//Setup gib tilesheet
+		add(_mGibs);
+		
+		if (_text != "You escaped!") {
+			new FlxTimer(1.5, function(_) { playerSprite.kill();FlxG.sound.play(FileReg.sndPlayerDeath); _mGibs.at(playerSprite);
+			_mGibs.start(true, 2.80); } );
+			
+			FlxG.sound.play(FileReg.sndPlayerDeathAmbient);
+		}
+		_btnMainMenu = new FlxButton(0, FlxG.height - 32, "Main Menu", goMainMenu);
 		_btnMainMenu.screenCenter(true, false);
 		add(_btnMainMenu);
-		_btnRematch = new FlxButton(0, FlxG.height - 64, "Rematch (start)", goPlay);
+		_btnRematch = new FlxButton(0, FlxG.height - 64, "Restart", goPlay);
 		_btnRematch.screenCenter(true, false);
 		add(_btnRematch);
 		
@@ -61,11 +90,6 @@ class EndGameState extends FlxState
 	override public function update():Void 
 	{
 		
-			if (FlxG.gamepads.anyPressed(GamepadIDs.START)) {	//Check if pressed start, if so rematch
-				FlxG.switchState(new PlayState());
-			}else if (FlxG.gamepads.anyPressed(GamepadIDs.SELECT)) {	//Check if select, if so go back to main menu
-				FlxG.switchState(new MenuState());
-			}
 			super.update();
 		
 	}
@@ -81,7 +105,7 @@ class EndGameState extends FlxState
 	private function goPlay():Void
 	{
 		FlxG.camera.fade(FlxColor.BLACK, .66, false, function() {
-			FlxG.switchState(new PlayState());
+			FlxG.switchState(new CharacterSelectState());
 		});
 	}
 	//Cleanup

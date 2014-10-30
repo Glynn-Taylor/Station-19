@@ -26,26 +26,34 @@ class FileReg
 	public static inline var sndSelect:String = sndPath + "select.wav";
 	public static inline var sndToggle:String = sndPath + "button02.wav";
 	public static inline var sndButton:String = sndPath + "button01.wav";
+	public static inline var sndChest:String = sndPath + "chest.wav";
 	public static inline var sndElevator:String = sndPath + "elevator.wav";
 	public static inline var sndStep:String = sndPath + "step.wav";
 	public static inline var sndWin:String = sndPath + "win.wav";
 	public static inline var sndMPain1:String = sndMonsterPath + "pain1.wav";
 	public static inline var sndMPain2:String = sndMonsterPath + "pain2.wav";
+	public static inline var sndMDarkness:String = sndMonsterPath + "darkness.wav";
+	public static inline var sndMGroan:String = sndMonsterPath + "groan.wav";
 	public static inline var sndMDeath1:String = sndMonsterPath + "death1.wav";
 	public static inline var sndWRifle:String = sndPath + "weapon/" + "cg1.wav";
 	public static inline var sndWPistol:String = sndPath + "weapon/" + "pistol.wav";
 	public static inline var sndWEmpty:String = sndPath + "weapon/" + "gun_empty.wav";
-	public static inline var sndWReload:String = sndPath+"weapon/" + "pistol_reload.wav";
+	public static inline var sndWReload:String = sndPath + "weapon/" + "pistol_reload.wav";
+	public static inline var sndPlayerHurt:String = sndPath + "step.wav";
+	public static inline var sndPlayerDeath:String = sndPath + "death.wav";
+	public static inline var sndPlayerDeathAmbient:String = sndPath + "deathtune.wav";
 	//IMAGES//
 	public static inline var imgButton:String = imgPath + "button.png";
 	public static inline var imgDecal:String = imgPath + "decaltiles.png";
 	public static inline var imgGibs:String = imgPath + "gibs.png";
 	public static inline var imgMGibs:String = imgPath + "mgibs.png";
+	public static inline var imgPGibs:String = imgPath + "pgibs.png";
 	public static inline var imgFlashlight:String = imgCharPath + "flashlight.png";
 	public static inline var imgPlayer:String = imgCharPath + "player_female.png";
 
 	public static inline var imgEnemies:String = imgCharPath + "enemies.png";
 	public static inline var imgZombie:String = imgCharPath + "zombie.png";
+	public static inline var imgDarkness:String = imgCharPath + "darkness.png";
 	public static inline var imgSkeleton:String = imgCharPath + "skeleton.png";
 	public static inline var imgPlayerMale:String = imgCharPath + "player_male.png";
 	public static inline var imgPlayerNeutral:String = imgCharPath + "player_helmet.png";

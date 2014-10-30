@@ -1,6 +1,9 @@
 package entities;
 import flixel.FlxG;
 import flixel.FlxSprite;
+import flixel.text.FlxText;
+import flixel.tweens.FlxEase;
+import flixel.tweens.FlxTween;
 import flixel.util.FlxRandom;
 import flixel.util.FlxTimer;
 import player.Player;
@@ -24,10 +27,13 @@ class Chest extends Useable
 	
 	override public function interact(_player:Player, _triggerMap:Map<Int,Triggerable>) {
 		if(_canBeOpened){
-			FlxG.sound.play(FileReg.sndButton, 1, false);
+			FlxG.sound.play(FileReg.sndChest, 1, false);
 			_player.addAmmo(_amount);
 			_canBeOpened = false;
 			animation.play("open");
+			var text : FlxText = new FlxText(x, y, 20, "+" + Std.string(_amount));
+			FlxG.state.add(text);
+			FlxTween.tween(text, { alpha:0 }, 1, { ease: FlxEase.quadInOut, complete: function(_) { text.destroy(); } } );
 		}
 	}
 	override public function update():Void 
