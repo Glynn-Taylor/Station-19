@@ -9,6 +9,7 @@ import entities.Hiding;
 import entities.Light;
 import entities.Triggerable;
 import entities.TriggerLadder;
+import entities.TriggerLevel;
 import entities.TriggerText;
 import entities.Useable;
 import flixel.addons.display.FlxZoomCamera;
@@ -64,6 +65,7 @@ class PlayState extends FlxState
 	public var _useableEnt:FlxTypedGroup<Useable>;
 	public var _grpTrigger:FlxTypedGroup<Triggerable>;
 	public var _grpEnemies:FlxTypedGroup<Enemy>;
+	public var _levelTrigger:TriggerLevel;
 	//Emitter var
 	private var _gibs:FlxEmitter;
 	private var _mGibs:FlxEmitter;
@@ -190,7 +192,13 @@ class PlayState extends FlxState
 		FlxG.overlap( _grpTrigger,_player, triggerTrig);
 		FlxG.overlap(_player._rifle.group, _grpEnemies, hurtEnemy);
 		FlxG.overlap(_player, _grpEnemies, hurtPlayer);
-		
+		if(_levelTrigger!=null){
+			FlxG.overlap(_player, _levelTrigger, changeLevel);
+		}else {
+			FlxG.camera.fade(FlxColor.BLACK, .66, false, function() {	//Fade out
+				FlxG.switchState(new EndGameState("You escaped!"));	//Switch state
+			});
+		}
 		FlxG.collide(_gibs, _mTiles);					//Check gibs vs walls collision
 		FlxG.collide(_mGibs, _mTiles);
 		FlxG.collide(_player._rifle.group, _solidEnt, destroyBullet);
@@ -201,6 +209,9 @@ class PlayState extends FlxState
 		FlxG.collide(_mTiles, _grpEnemies);	
 		for (enemy in _grpEnemies) {
 			enemy.checkBumper(_player, _mTiles);
+		}
+		if (FlxG.keys.pressed.TWO ) {
+			loadLevel(2);
 		}
 	}
 	override public function draw():Void {
@@ -229,7 +240,7 @@ class PlayState extends FlxState
 				_player = new Player(FlxG.width / 2 - 5, 30,"");	//Position changed on next line, stores pID and colour
 				//_player.dirty = true;
 			}
-		
+			_player.velocity.set(0, 0);
 			_player.setPosition(x, y);
 			add(_player);
 		}
@@ -298,6 +309,15 @@ class PlayState extends FlxState
 			_grpTrigger.add(_txtTrigger);
 			FlxG.log.add("added text trigger");
 		}
+		else if (entityName == "trigger_level")						//If a spawn position
+		{
+			var w:Float = Std.parseFloat(entityData.get("width"));
+			var h:Float = Std.parseFloat(entityData.get("height"));
+			//var _light:Light = new Light(x, y,darkness, Std.parseFloat(entityData.get("Scale")));
+			_levelTrigger = new TriggerLevel(x, y, w, h, Std.parseInt(entityData.get("level_id")));
+			add(_levelTrigger);
+			FlxG.log.add("added level trigger");
+		}
 		else if (entityName == "trigger_ladder")						//If a spawn position
 		{
 			var w:Float = Std.parseFloat(entityData.get("width"));
@@ -364,6 +384,109 @@ class PlayState extends FlxState
 			break;
 		}
 		}
+	}
+	private function changeLevel(a:FlxObject, b:FlxObject):Void
+	{
+		loadLevel(_levelTrigger._id);	
+	}
+	private function cleanGroups() {
+		
+		_mTiles = FlxDestroyUtil.destroy(_mTiles);
+		_mWalls= FlxDestroyUtil.destroy(_mWalls);
+		_mTilesBehind = FlxDestroyUtil.destroy(_mTilesBehind);
+		_mTilesInFront = FlxDestroyUtil.destroy(_mTilesInFront);
+		_solidEnt=FlxDestroyUtil.destroy(_solidEnt);
+		_solidEnt = new FlxTypedGroup<FlxSprite>();
+		_useableEnt=FlxDestroyUtil.destroy(_useableEnt);
+		_useableEnt = new FlxTypedGroup<Useable>();
+		_grpLight=FlxDestroyUtil.destroy(_grpLight);
+		_grpLight = new FlxTypedGroup<Light>();
+		_grpTrigger=FlxDestroyUtil.destroy(_grpTrigger);
+		_grpTrigger = new FlxTypedGroup<Triggerable>();
+		_grpEnemies=FlxDestroyUtil.destroy(_grpEnemies);
+		_grpEnemies = new FlxTypedGroup<Enemy>();
+		_triggerMap = new Map<Int,Triggerable>();
+		remove(_levelTrigger);
+		_levelTrigger = null;
+		remove(_mWalls);
+		remove(_mTilesBehind);
+		remove(_useableEnt);
+		remove(_solidEnt);
+		remove(_mTiles);
+		remove(_player);
+		remove(_gibs);
+		remove(_mTilesInFront);
+		remove(_grpTrigger);
+		remove(_grpEnemies);
+		remove(_mGibs);
+		remove(_gibs);
+		remove(_grpLight);
+		remove(darkness);
+		_player.clean();
+	}
+	private function loadLevel(level_id:Int) {
+		//MAP//
+		cleanGroups();
+		_map = new FlxOgmoLoader(FileReg.dataLevel +Std.string(level_id)+".oel");	//Load level
+		_mTiles = _map.loadTilemap(FileReg.mapTiles, 16, 16, "tiles");	//Load walls with tilesheet using tiles layer
+		_mTiles.setTileProperties(1, FlxObject.NONE);	//Set tile 1 to be non collidable
+		_mTiles.setTileProperties(2, FlxObject.ANY);	//Set tile 2 to be collidable, makes 2+ collidable too if not set further
+		_mTiles.immovable = true;						//Ensure wall immovable (default)
+		
+		_mWalls = _map.loadTilemap(FileReg.mapTilesBG, 16, 16, "tiles_walls");	//Load map decals (after players so in front)
+		_mWalls.setTileProperties(1, FlxObject.NONE);	//Set non collideable
+		add(_mWalls);									//Add to scene
+		
+		_mTilesBehind = _map.loadTilemap(FileReg.mapTilesBG, 16, 16, "tiles_behind");	//Load map decals (after players so in front)
+		_mTilesBehind .setTileProperties(1, FlxObject.NONE);	//Set non collideable
+		
+		add(_mTilesBehind );
+		add(_useableEnt);
+		add(_solidEnt);
+		_map.loadEntities(createEntities, "ent");	//Create spawning positions
+		_map.loadEntities(createEntities, "ent_behind");	//Create spawning positions
+		add(_mTiles);	
+		//_player.createFlashLight(darkness);
+		_player.trackLight(_grpLight);
+		//UTIL//
+		FlxG.mouse.visible = false;						//Hide Cursor
+		//_sndHit = FlxG.sound.load(FileReg.sndHit);		//Load sound hit
+		//_sndPickup = FlxG.sound.load(FileReg.sndPickup);//Load sound pickup
+		
+		//_gibs = new FlxEmitter();						//Create emitter for gibs
+		//_gibs.setXSpeed( -150, 150);					//Gib settings
+		//_gibs.setYSpeed( -200, 0);
+		//_gibs.acceleration.y = 400;						//Add gravity to gibs
+		//_gibs.setRotation( -720, 720);
+		//_gibs.makeParticles(FileReg.imgGibs, 25, 16, true, .5);	//Setup gib tilesheet
+		add(_gibs);										//Add gibs to scene
+		//MAP//
+		_mTilesInFront = _map.loadTilemap(FileReg.mapTilesBG, 16, 16, "tiles_infront");	//Load map decals (after players so in front)
+		_mTilesInFront.setTileProperties(1, FlxObject.NONE);	//Set non collideable
+		add(_mTilesInFront);									//Add to scene
+		
+		add(_grpTrigger);
+		add(_grpEnemies);
+		add(_mGibs);
+		add(_grpLight);
+		add(darkness);
+			var zoomCam:ZoomCamera = new ZoomCamera();
+		FlxG.cameras.reset( zoomCam);
+		zoomCam.targetZoom = 2;
+		FlxG.camera.follow(_player, FlxCamera.STYLE_LOCKON, null, 0);
+		
+		 guiCamera = new FlxCamera(0, 0, 480, 320, 1.0);
+		FlxG.cameras.add(guiCamera);
+		var _gui:FlxUIGroup = new FlxUIGroup();
+		
+		_player.addUI(_gui);
+		_gui.add(_textDisplay);
+		
+		add(_gui);
+		_gui.cameras = new Array<FlxCamera>();
+		_gui.cameras.push(guiCamera);
+		FlxCamera.defaultCameras.remove(guiCamera);
+	
 	}
 	//Cleanup
 	override public function destroy():Void 

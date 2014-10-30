@@ -279,6 +279,7 @@ class Player extends FlxSprite
 	
 	function keyboardButtons() 
 	{
+		
 		if(FlxG.keys.pressed.ESCAPE ){
 			FlxG.camera.fade(FlxColor.BLACK, .66, false, function() {	//Fade out
 				FlxG.switchState(new EndGameState("Restart?"));	//Switch state
@@ -522,5 +523,10 @@ class Player extends FlxSprite
 	public function forceLightOff() 
 	{
 		_flashLight.visible = false;
+	}
+	public function clean() {
+		forceLightOff(); 
+		health = 100;
+		_lights = null;
 	}
 }

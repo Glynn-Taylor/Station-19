@@ -76,7 +76,7 @@ class FileReg
 	public static inline var uiHealthIcon:String = uiPath + "health_icon.png";
 	//DATA//
 	public static inline var dataLevel_1:String = dataPath + "level_1.oel";
-	
+	public static inline var dataLevel:String = dataPath + "level_";
 	//End.
 	
 }

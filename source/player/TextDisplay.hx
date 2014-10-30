@@ -48,7 +48,6 @@ class TextDisplay extends FlxTypeText
 					start(0.03, true, true, null, null);
 					_displaying = true;
 					new FlxTimer(3.0, removeText, 1);
-					FlxG.log.add("displaying " + _textList.first());
 				}
 		}
 	}
