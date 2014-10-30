@@ -149,7 +149,8 @@ class MenuState extends FlxState
 		darkness.scrollFactor.x = darkness.scrollFactor.y = 0;
 		darkness.blend = BlendMode.MULTIPLY;
 		
-		var light:Light = new Light(FlxG.width / 2, FlxG.height / 2, darkness,10);
+		var light:Light = new Light(FlxG.width / 2, FlxG.height / 2, darkness, 10);
+		light.finalise();
 		add(light);
 		add(darkness);
 		var zoomCam:ZoomCamera = new ZoomCamera();
@@ -199,7 +200,7 @@ class MenuState extends FlxState
 		super.update();
 	}
 	override public function draw():Void {
-		FlxSpriteUtil.fill(darkness, 0xff000000);
+		//FlxSpriteUtil.fill(darkness, 0xff000000);
 		super.draw();
 	}
 	//Cleanup

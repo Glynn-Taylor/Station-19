@@ -165,7 +165,9 @@ class CharacterSelectState extends FlxState
 		darkness.scrollFactor.x = darkness.scrollFactor.y = 0;
 		darkness.blend = BlendMode.MULTIPLY;
 		
-		var light:Light = new Light(FlxG.width / 2, FlxG.height / 2, darkness,25);
+		var light:Light = new Light(FlxG.width / 2, FlxG.height / 2, darkness, 25);
+		light.finalise();
+		
 		add(light);
 		add(darkness);
 		add(_player);
@@ -195,7 +197,7 @@ class CharacterSelectState extends FlxState
 		super.update();
 	}
 	override public function draw():Void {
-		FlxSpriteUtil.fill(darkness, 0xff000000);
+		//FlxSpriteUtil.fill(darkness, 0xff000000);
 		super.draw();
 	}
 	//Cleanup

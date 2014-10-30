@@ -98,9 +98,6 @@ class PlayState extends FlxState
 		_grpTrigger = new FlxTypedGroup<Triggerable>();
 		_grpEnemies = new FlxTypedGroup<Enemy>();
 		darkness = new FlxSprite(0,0);
-		darkness.makeGraphic(FlxG.width, FlxG.height, 0xff000000);
-		darkness.scrollFactor.x = darkness.scrollFactor.y = 0;
-		darkness.blend = BlendMode.MULTIPLY;
 		
 		_mGibs = new FlxEmitter();						//Create emitter for gibs
 		_mGibs.setXSpeed( -150, 150);					//Gib settings
@@ -119,6 +116,10 @@ class PlayState extends FlxState
 		_mWalls = _map.loadTilemap(FileReg.mapTilesBG, 16, 16, "tiles_walls");	//Load map decals (after players so in front)
 		_mWalls.setTileProperties(1, FlxObject.NONE);	//Set non collideable
 		add(_mWalls);									//Add to scene
+		
+		darkness.makeGraphic(Math.floor(FlxG.worldBounds.width), Math.floor(FlxG.worldBounds.height), 0xff000000);
+		//darkness.scrollFactor.x = darkness.scrollFactor.y = 0;
+		darkness.blend = BlendMode.MULTIPLY;
 		
 		_mTilesBehind = _map.loadTilemap(FileReg.mapTilesBG, 16, 16, "tiles_behind");	//Load map decals (after players so in front)
 		_mTilesBehind .setTileProperties(1, FlxObject.NONE);	//Set non collideable
@@ -153,7 +154,6 @@ class PlayState extends FlxState
 		add(_mGibs);
 		add(_grpLight);
 		add(darkness);
-		
 		
 		
 	
@@ -216,9 +216,12 @@ class PlayState extends FlxState
 		if (FlxG.keys.pressed.TWO ) {
 			loadLevel(2);
 		}
+		if (FlxG.keys.pressed.NINE) {
+			_player.kill();
+		}
 	}
 	override public function draw():Void {
-		FlxSpriteUtil.fill(darkness, 0xff000000);
+		//FlxSpriteUtil.fill(darkness, 0x00000000);
 		guiCamera.fill(0x00000000, false, 1);
 		super.draw();
 	}
@@ -251,8 +254,9 @@ class PlayState extends FlxState
 		else if (entityName == "ent_light")						//If a spawn position
 		{
 		
-			var _light:Light = new Light(x, y,darkness, Std.parseFloat(entityData.get("Scale")));
-			_light.color=(Std.parseInt("0x"+entityData.get("Color").substring(1)));
+			var _light:Light = new Light(x, y,darkness, Std.parseFloat(entityData.get("Scale")),(Std.parseInt("0x" + entityData.get("Color").substring(1))));
+			//_light.color = ;
+			_light.finalise();
 			//_light.color = Std.parseInt(entityData.get("Color"));
 			_grpLight.add(_light);
 		}
@@ -436,6 +440,7 @@ class PlayState extends FlxState
 		remove(_grpLight);
 		remove(darkness);
 		_player.clean();
+		darkness.makeGraphic(Math.floor(FlxG.worldBounds.width), Math.floor(FlxG.worldBounds.height), 0xff000000);
 	}
 	private function loadLevel(level_id:Int) {
 		//MAP//
@@ -460,7 +465,9 @@ class PlayState extends FlxState
 		_map.loadEntities(createEntities, "ent_behind");	//Create spawning positions
 		add(_mTiles);	
 		//_player.createFlashLight(darkness);
+		_player.createFlashLight(darkness);
 		_player.trackLight(_grpLight);
+		_player.makeWeapon();
 		//UTIL//
 		FlxG.mouse.visible = false;						//Hide Cursor
 		//_sndHit = FlxG.sound.load(FileReg.sndHit);		//Load sound hit
@@ -483,7 +490,7 @@ class PlayState extends FlxState
 		add(_mGibs);
 		add(_grpLight);
 		add(darkness);
-			var zoomCam:ZoomCamera = new ZoomCamera();
+		var zoomCam:ZoomCamera = new ZoomCamera();
 		FlxG.cameras.reset( zoomCam);
 		zoomCam.targetZoom = 2;
 		FlxG.camera.follow(_player, FlxCamera.STYLE_LOCKON, null, 0);

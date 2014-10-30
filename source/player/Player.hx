@@ -36,8 +36,8 @@ class Player extends FlxSprite
 	//Constant vars
 	private static inline var SPEED:Float = 10;
 	private static inline var DASH_SPEED:Float = 100;
-	private static inline var FLASHLIGHT_X:Int = 71;
-	private static inline var FLASHLIGHT_Y:Int = 10;
+	private static inline var FLASHLIGHT_X:Int = 8;
+	private static inline var FLASHLIGHT_Y:Int = -5;
 	private static inline var FLASHLIGHT_RATE:Float = 0.1;
 	private static inline var MAX_AMMO_IN_CLIP:Int = 16;
 	private static inline var UI_X:Int = 7;
@@ -63,7 +63,7 @@ class Player extends FlxSprite
 	private var _sndStep:FlxSound;
 	private var _sndFire:FlxSound;
 	//UI vars
-	private var _flashLight:Light;
+	public var _flashLight:FlashLight;
 	private var _ammoText:FlxText;
 	public var _rifle:FlxWeapon;
 	private var _flashlightBar:FlxBar;
@@ -131,10 +131,11 @@ class Player extends FlxSprite
 		_darknessSound = FlxG.sound.play(FileReg.sndMDarkness,1,true);
 		_darknessSound.volume = 0;
 		FlxG.state.add(_darknessMonster);
+		//FlxG.game.
 		//FlxG.state.add(_ammoText);
 	}
 	
-	function makeWeapon() 
+	public function makeWeapon() 
 	{
 		_rifle = new FlxWeapon("rifle", this);
 			
@@ -303,6 +304,7 @@ class Player extends FlxSprite
 				_canToggle = false;
 				FlxG.sound.play(FileReg.sndToggle, 1, false);
 				_flashLight.visible = !_flashLight.visible;
+				_flashLight.clear();
 				new FlxTimer(0.3, allowToggle, 1);
 			}
 		}
@@ -434,7 +436,8 @@ class Player extends FlxSprite
 	//On death of player destroy UI too
 	override public function kill():Void 
 	{
-		_ammoText.kill();
+		//if(_ammoText!=null)
+		//_ammoText.kill();
 		super.kill();
 		FlxG.camera.fade(FlxColor.BLACK, .66, false, function() {
 			FlxG.switchState(new EndGameState("You died.."));
@@ -455,9 +458,9 @@ class Player extends FlxSprite
 	override public function destroy():Void 
 	{
 		super.destroy();
-		_sndFire = FlxDestroyUtil.destroy(_sndFire);
-		_sndStep = FlxDestroyUtil.destroy(_sndStep);
-		_ammoText= FlxDestroyUtil.destroy(_ammoText);
+		//_sndFire = FlxDestroyUtil.destroy(_sndFire);
+		//_sndStep = FlxDestroyUtil.destroy(_sndStep);
+		//_ammoText= FlxDestroyUtil.destroy(_ammoText);
 	}
 	
 	public function changeHairColor(col:Int):Void {
@@ -497,7 +500,7 @@ class Player extends FlxSprite
 		_skin= [0xFFF6D5A4, 0xFFDE9462];
 	}
 	public function createFlashLight(darkness:FlxSprite) {
-		_flashLight = new Light(this.x, this.y, darkness, 1);
+		_flashLight = new FlashLight(this.x, this.y, darkness, 1);
 		_flashLight.loadGraphic(FileReg.imgFlashlight, false, 128, 32);
 		_flashLight.setFacingFlip(FlxObject.LEFT, true, false);			//Assign flipping of animation based on "facing" variable
 		_flashLight.setFacingFlip(FlxObject.RIGHT, false, false);	
