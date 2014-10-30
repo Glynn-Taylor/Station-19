@@ -90,6 +90,7 @@ class PlayState extends FlxState
 	//Initialisation
 	override public function create():Void 
 	{
+		super.create();
 		//LIGHTING//
 		bgColor = 0xFF000000;
 		_solidEnt = new FlxTypedGroup<FlxSprite>();
@@ -166,11 +167,12 @@ class PlayState extends FlxState
 		//FlxG.camera.follow(_player, FlxCamera.STYLE_LOCKON,null,0);
 		var zoomCam:ZoomCamera = new ZoomCamera();
 		FlxG.cameras.reset( zoomCam);
-		zoomCam.targetZoom = 1.75;
-		FlxG.camera.follow(_player, FlxCamera.STYLE_LOCKON, null, 0);
+		//zoomCam.targetZoom = 1.75;
+		//FlxG.camera.follow(_player, FlxCamera.STYLE_LOCKON, null, 0);
 		
-		 guiCamera = new FlxCamera(0, 0, 400, 300, 1.0);
-		 #if (flash) FlxG.cameras.add(guiCamera); #end
+		 guiCamera = new FlxCamera(0, 0, 400, 300, 1);
+		 guiCamera.bgColor = 0x00000000;
+		FlxG.cameras.add(guiCamera);
 		
 		var _gui:FlxUIGroup = new FlxUIGroup();
 		
@@ -178,17 +180,21 @@ class PlayState extends FlxState
 		_textDisplay = new TextDisplay(300 , 0, 100,8);
 		_gui.add(_textDisplay);
 		
+		
 		add(_gui);
-		_gui.cameras = new Array<FlxCamera>();
-		_gui.cameras.push(guiCamera);
-		//FlxCamera.defaultCameras.remove(guiCamera);
-		//FlxG.cameras.add(guiCamera);
+		_gui.cameras=[guiCamera];
+		
+		
+		zoomCam.targetZoom = 1.75;
+		FlxG.camera.follow(_player, FlxCamera.STYLE_LOCKON, null, 0);
+		
+		FlxCamera.defaultCameras = [zoomCam];
 		 #if (flash) FlxCamera.defaultCameras.remove(guiCamera); #end
-		cast(FlxG.game, GFlxGame).GOnResize();
+		///cast(FlxG.game, GFlxGame).GOnResize();
 		//FlxG.cameras.remove(guiCamera, true);
 		new FlxTimer(3, randomGroan, 0);
 		new FlxTimer(30, checkMusic, 0);
-		super.create();
+		
 	}
 	
 	//Run every Frame
@@ -217,7 +223,7 @@ class PlayState extends FlxState
 		for (enemy in _grpEnemies) {
 			enemy.checkBumper(_player, _mTiles);
 		}
-		if (FlxG.keys.pressed.TWO ) {
+		/*if (FlxG.keys.pressed.TWO ) {
 			loadLevel(2);
 		}
 		if (FlxG.keys.pressed.THREE) {
@@ -225,11 +231,11 @@ class PlayState extends FlxState
 		}
 		if (FlxG.keys.pressed.NINE) {
 			_player.kill();
-		}
+		}*/
 	}
 	override public function draw():Void {
 		//FlxSpriteUtil.fill(darkness, 0x00000000);
-		guiCamera.fill(0x00000000, false, 1);
+		//guiCamera.fill(0x00000000, false, 1);
 		super.draw();
 	}
 	
@@ -355,7 +361,7 @@ class PlayState extends FlxState
 			_grpEnemies.add(_skele);
 			_skele.animation.add("attack", [3, 4, 5], 4, false);
 			_skele.animation.add("recovering", [6, 7, 8], 4, false);
-			_skele.setDamage(25);
+			_skele.setDamage(15);
 			FlxG.log.add("added enemy skeleton");
 		}
 	}
@@ -501,22 +507,30 @@ class PlayState extends FlxState
 		add(_mGibs);
 		add(_grpLight);
 		add(darkness);
-		var zoomCam:ZoomCamera = new ZoomCamera();
+			var zoomCam:ZoomCamera = new ZoomCamera();
 		FlxG.cameras.reset( zoomCam);
-		zoomCam.targetZoom = 2;
-		FlxG.camera.follow(_player, FlxCamera.STYLE_LOCKON, null, 0);
+		//zoomCam.targetZoom = 1.75;
+		//FlxG.camera.follow(_player, FlxCamera.STYLE_LOCKON, null, 0);
 		
-		 guiCamera = new FlxCamera(0, 0, 480, 320, 1.0);
+		 guiCamera = new FlxCamera(0, 0, 400, 300, 1);
+		 guiCamera.bgColor = 0x00000000;
 		FlxG.cameras.add(guiCamera);
+		
 		var _gui:FlxUIGroup = new FlxUIGroup();
 		
 		_player.addUI(_gui);
+		_textDisplay = new TextDisplay(300 , 0, 100,8);
 		_gui.add(_textDisplay);
 		
+		
 		add(_gui);
-		_gui.cameras = new Array<FlxCamera>();
-		_gui.cameras.push(guiCamera);
-		FlxCamera.defaultCameras.remove(guiCamera);
+		_gui.cameras=[guiCamera];
+		
+		
+		zoomCam.targetZoom = 1.75;
+		FlxG.camera.follow(_player, FlxCamera.STYLE_LOCKON, null, 0);
+		
+		FlxCamera.defaultCameras = [zoomCam];
 	
 	}
 	//Cleanup

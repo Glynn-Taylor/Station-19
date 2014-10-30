@@ -66,7 +66,7 @@ class EnemyPatrol extends Enemy{
 			facing = FlxObject.RIGHT;
 		}
 		
-		velocity.x = speedX * directionX;
+		velocity.x = speedX * directionX*(_trackingPlayer?1.5:1);
 		}
 		super.update();
 

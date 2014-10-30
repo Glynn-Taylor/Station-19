@@ -160,7 +160,7 @@
     <trigger_ladder id="2" x="688" y="144" width="16" height="240" />
     <ent_button id="3" x="272" y="64" button_id="1" />
     <ent_light id="4" x="304" y="64" Scale="7" Color="#80FFFF" />
-    <ent_chest id="10" x="624" y="160" ammo="6" />
+    <ent_chest id="10" x="624" y="160" ammo="9" />
     <ent_light id="11" x="624" y="144" Scale="3" Color="#FFFFFF" />
     <spawn_eye id="12" x="128" y="256">
       <node x="128" y="256" />
@@ -182,7 +182,7 @@
     <ent_button id="23" x="192" y="352" button_id="4" />
     <ent_light id="24" x="560" y="496" Scale="2" Color="#00FFFF" />
     <ent_light id="24" x="208" y="400" Scale="2" Color="#FF0000" />
-    <ent_chest id="19" x="368" y="448" ammo="6" />
+    <ent_chest id="19" x="368" y="448" ammo="10" />
     <trigger_ladder id="20" x="304" y="448" width="16" height="80" />
     <trigger_ladder id="25" x="416" y="448" width="16" height="80" />
   </ent_behind>
