@@ -81,15 +81,13 @@ class PlayState extends FlxState
 	public function new() 
 	{
 		super();
-	
-		
 	}
 	
 	//Initialisation
 	override public function create():Void 
 	{
 		super.create();
-		//LIGHTING//
+		//SETUP
 		bgColor = 0xFF000000;
 		_solidEnt = new FlxTypedGroup<FlxSprite>();
 		_useableEnt = new FlxTypedGroup<Useable>();
@@ -98,34 +96,34 @@ class PlayState extends FlxState
 		_grpEnemies = new FlxTypedGroup<Enemy>();
 		darkness = new FlxSprite(0,0);
 		
-		_mGibs = new FlxEmitter();						//Create emitter for gibs
-		_mGibs.setXSpeed( -150, 150);					//Gib settings
+		//MONSTER GIBS//
+		_mGibs = new FlxEmitter();							//Create emitter for gibs
+		_mGibs.setXSpeed( -150, 150);						//Gib settings
 		_mGibs.setYSpeed( -200, 0);
 		_mGibs.acceleration.y = 400;						//Add gravity to gibs
 		_mGibs.setRotation( -720, 720);
 		_mGibs.makeParticles(FileReg.imgMGibs, 25, 16, true, .5);	//Setup gib tilesheet
-												//Add gibs to scene
 		//MAP//
-		_map = new FlxOgmoLoader(FileReg.dataLevel_1);	//Load level
+		_map = new FlxOgmoLoader(FileReg.dataLevel_1);		//Load level
 		_mTiles = _map.loadTilemap(FileReg.mapTiles, 16, 16, "tiles");	//Load walls with tilesheet using tiles layer
-		_mTiles.setTileProperties(1, FlxObject.NONE);	//Set tile 1 to be non collidable
-		_mTiles.setTileProperties(2, FlxObject.ANY);	//Set tile 2 to be collidable, makes 2+ collidable too if not set further
-		_mTiles.immovable = true;						//Ensure wall immovable (default)
+		_mTiles.setTileProperties(1, FlxObject.NONE);		//Set tile 1 to be non collidable
+		_mTiles.setTileProperties(2, FlxObject.ANY);		//Set tile 2 to be collidable, makes 2+ collidable too if not set further
+		_mTiles.immovable = true;							//Ensure wall immovable (default)
 		
 		_mWalls = _map.loadTilemap(FileReg.mapTilesBG, 16, 16, "tiles_walls");	//Load map decals (after players so in front)
-		_mWalls.setTileProperties(1, FlxObject.NONE);	//Set non collideable
-		add(_mWalls);									//Add to scene
+		_mWalls.setTileProperties(1, FlxObject.NONE);		//Set non collideable
+		add(_mWalls);										//Add to scene
 		
+		//CREATE DARKNESS SPRITE//
 		darkness.makeGraphic(Math.floor(FlxG.worldBounds.width), Math.floor(FlxG.worldBounds.height), 0xff000000);
-		//darkness.scrollFactor.x = darkness.scrollFactor.y = 0;
 		darkness.blend = BlendMode.MULTIPLY;
-		
+		//LOAD TILEMAPS AND ENTITIES//
 		_mTilesBehind = _map.loadTilemap(FileReg.mapTilesBG, 16, 16, "tiles_behind");	//Load map decals (after players so in front)
 		_mTilesBehind .setTileProperties(1, FlxObject.NONE);	//Set non collideable
 		add(_mTilesBehind );	
 		add(_useableEnt);
 		add(_solidEnt);
-		_map.loadEntities(createEntities, "ent");	//Create spawning positions
+		_map.loadEntities(createEntities, "ent");			//Load entities
 		_map.loadEntities(createEntities, "ent_behind");	//Create spawning positions
 		add(_mTiles);	
 		_player.createFlashLight(darkness);
@@ -189,10 +187,12 @@ class PlayState extends FlxState
 	override public function update():Void 
 	{
 		super.update();
+		//INTERACTIONS//
 		FlxG.overlap( _useableEnt, _player, useEnt);
 		FlxG.overlap( _grpTrigger,_player, triggerTrig);
 		FlxG.overlap(_player._rifle.group, _grpEnemies, hurtEnemy);
 		FlxG.overlap(_player, _grpEnemies, hurtPlayer);
+		//LEVEL CHANGES//
 		if(_levelTrigger!=null){
 			FlxG.overlap(_player, _levelTrigger, changeLevel);
 		}else {
@@ -200,6 +200,7 @@ class PlayState extends FlxState
 				FlxG.switchState(new EndGameState("You escaped!"));	//Switch state
 			});
 		}
+		//COLLISIONS
 		FlxG.collide(_mGibs, _mTiles);
 		FlxG.collide(_player._rifle.group, _solidEnt, destroyBullet);
 		FlxG.collide(_player._rifle.group,_mTiles,destroyBullet);
@@ -207,23 +208,10 @@ class PlayState extends FlxState
 		FlxG.collide(_solidEnt,_player);	
 		FlxG.collide(_mTiles, _player);				//Check players vs walls collision
 		FlxG.collide(_mTiles, _grpEnemies);	
+		//AI//
 		for (enemy in _grpEnemies) {
 			enemy.checkBumper(_player, _mTiles);
 		}
-		/*if (FlxG.keys.pressed.TWO ) {
-			loadLevel(2);
-		}
-		if (FlxG.keys.pressed.THREE) {
-			loadLevel(3);
-		}
-		if (FlxG.keys.pressed.NINE) {
-			_player.kill();
-		}*/
-	}
-	override public function draw():Void {
-		//FlxSpriteUtil.fill(darkness, 0x00000000);
-		//guiCamera.fill(0x00000000, false, 1);
-		super.draw();
 	}
 	
 	//Ends the game and transitions to new state with victory string
@@ -408,23 +396,10 @@ class PlayState extends FlxState
 	}
 	private function cleanGroups() {
 		
-		/*_mTiles = FlxDestroyUtil.destroy(_mTiles);
-		_mWalls= FlxDestroyUtil.destroy(_mWalls);
-		_mTilesBehind = FlxDestroyUtil.destroy(_mTilesBehind);
-		_mTilesInFront = FlxDestroyUtil.destroy(_mTilesInFront);
-		_solidEnt=FlxDestroyUtil.destroy(_solidEnt);
-		_solidEnt = new FlxTypedGroup<FlxSprite>();
-		_useableEnt=FlxDestroyUtil.destroy(_useableEnt);
-		_useableEnt = new FlxTypedGroup<Useable>();
-		_grpLight=FlxDestroyUtil.destroy(_grpLight);
-		_grpLight = new FlxTypedGroup<Light>();
-		_grpTrigger=FlxDestroyUtil.destroy(_grpTrigger);
-		_grpTrigger = new FlxTypedGroup<Triggerable>();*/
 		_solidEnt.clear();
 		_useableEnt.clear();
 		_grpLight.clear();
 		_grpTrigger.clear();
-		//_grpEnemies=FlxDestroyUtil.destroy(_grpEnemies);
 		_grpEnemies = new FlxTypedGroup<Enemy>();
 		_triggerMap = new Map<Int,Triggerable>();
 		remove(_levelTrigger);
