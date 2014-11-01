@@ -28,7 +28,6 @@ class Player extends FlxSprite
 {
 	//Constant vars
 	private static inline var SPEED:Float = 10;
-	private static inline var DASH_SPEED:Float = 100;
 	private static inline var FLASHLIGHT_X:Int = 8;
 	private static inline var FLASHLIGHT_Y:Int = -5;
 	private static inline var FLASHLIGHT_RATE:Float = 0.1;
@@ -40,8 +39,6 @@ class Player extends FlxSprite
 	//Data vars
 	private var _lastAngle:Float = 0;
 	private var _hasFired:Bool = false;
-	private var _hasDashed:Bool = false;
-	private var _numArrows:Int = 3;
 	private var _flashLightEquipped:Bool = false;
 	public var _isHidden:Bool = false;
 	public var _onLadder:Bool = false;
@@ -78,13 +75,13 @@ class Player extends FlxSprite
 	
 	//Constructor
 	public function new(X:Float=0, Y:Float=0,graphic:String) 
-	{											//Set player id (controller number)
-		super(X, Y);
+	{
+		super(X, Y);													//Set position
 		if(Reg.playerPixels==null||graphic!="")
-			loadGraphic(graphic, true, 32, 32);	//Load sprite
+			loadGraphic(graphic, true, 32, 32);							//Load sprite if no char created
 		else
-			loadGraphic(Reg.playerPixels.clone(), true, 32, 32);
-		
+			loadGraphic(Reg.playerPixels.clone(), true, 32, 32);		//If char has been created
+		//Set player anim data and movement modifiers
 		createAnimations();
 		maxVelocity.set(80, 400);
 		acceleration.y = Reg.GRAVITY;									//Setup gravity
@@ -97,7 +94,6 @@ class Player extends FlxSprite
 		offset.x = 8;
 		offset.y = 5;
 		
-		//centerOffsets();
 		//Sounds
 		_sndStep = FlxG.sound.load(FileReg.sndStep, 0.5, false);
 		_sndFire = FlxG.sound.load(FileReg.sndFire, 1, false);
@@ -113,11 +109,10 @@ class Player extends FlxSprite
 		_healthBar = new FlxBar(UI_X + 16, UI_Y + 18 , FlxBar.FILL_LEFT_TO_RIGHT);
 		_healthBar.createImageBar(null, FileReg.uiFlashlightBar, 0x88000000);
 		_healthBar.scrollFactor.x = _healthBar.scrollFactor.y = 0;
-		//_flashLight.scale.x = _flashLight.scale.y = 0.5;
-		
+		//Create weapon and set health
 		makeWeapon();
 		health = 100;
-		
+		//Load darkness monster graphics and sound offscreen
 		_darknessMonster = new FlxSprite( -50, 10);
 		_darknessMonster.loadGraphic(FileReg.imgDarkness, true, 24, 32, false);
 		_darknessMonster.animation.add("move", [0,1,2], 6, true);
@@ -178,37 +173,37 @@ class Player extends FlxSprite
 	//Updates darkness monster if light level low enough
 	function updateDarkness() 
 	{
-		if (_flashLight.visible) {
-			if(!_darknessTeleporting)
-				if (_darknessMonster.x > x && facing == FlxObject.RIGHT) {
-					FlxTween.tween(_darknessMonster,{alpha: 0}, 1);
-					new FlxTimer(1, function(_) { _darknessTeleporting=false; }, 1);
-				}else if (_darknessMonster.x < x && facing == FlxObject.LEFT) {
-					FlxTween.tween(_darknessMonster,{alpha: 0}, 1);
-					new FlxTimer(1, function(_) { _darknessTeleporting=false; }, 1);
+		if (_flashLight.visible) {							//If darkness could be in light
+			if (!_darknessTeleporting)						//If not already teleporting
+				//If player can see monster with flashlight
+				if ((_darknessMonster.x > x && facing == FlxObject.RIGHT)||(_darknessMonster.x < x && facing == FlxObject.LEFT)) {	
+					FlxTween.tween(_darknessMonster, { alpha: 0 }, 1);
+					_darknessTeleporting = true;
+					new FlxTimer(1, function(_) {_darknessMonster.x = x + (facing == FlxObject.LEFT?_lightLevel: -_lightLevel); _darknessTeleporting=false; }, 1);
 				}else {
-					_darknessMonster.y = y;
-					if (FlxMath.distanceBetween(_darknessMonster, this) > _lightLevel)
-						_darknessMonster.x = x + (facing == FlxObject.LEFT?_lightLevel: -_lightLevel);
-					_darknessMonster.x +=	(facing == FlxObject.LEFT?0.1: -0.1);
-					_darknessMonster.alpha = 1 - _lightLevel / 100;
-					_darknessSound.volume = 1 - _lightLevel / 100;
+					//Otherwise move closer
+					moveDarkness();
 				}
 		}else {
+			//Otherwise move closer if not teleporting
 			if (!_darknessTeleporting) {
-				_darknessMonster.y = y;
-				if (FlxMath.distanceBetween(_darknessMonster, this) > _lightLevel)
-					_darknessMonster.x = x + (facing == FlxObject.LEFT?_lightLevel: -_lightLevel);
-				_darknessMonster.x +=	(facing == FlxObject.LEFT?0.1: -0.1);
-				_darknessMonster.alpha = 1 - _lightLevel / 100;
-				_darknessSound.volume = 1 - _lightLevel / 100;
+				moveDarkness();
 			}
 		}
-		
-		if (_darknessMonster.alpha > 0.8)
+		//If light level<10 and overlapping, kill player
+		if (_darknessMonster.alpha > 0.9)
 		if (overlaps(_darknessMonster)) {
 			kill();
 		}
+	}
+	//Move darkness closer to player based on light level
+	private function moveDarkness() {
+		_darknessMonster.y = y;									//Sync y
+		if (FlxMath.distanceBetween(_darknessMonster, this) > _lightLevel)
+			_darknessMonster.x = x + (facing == FlxObject.LEFT?_lightLevel: -_lightLevel);	//Minimum at light level
+		_darknessMonster.x +=	(facing == FlxObject.LEFT?0.1: -0.1);//Move closer
+		_darknessMonster.alpha = 1 - _lightLevel / 100;
+		_darknessSound.volume = 1 - _lightLevel / 100;
 	}
 	//Creates weapon and creates bullets
 	public function makeWeapon() 
@@ -271,8 +266,9 @@ class Player extends FlxSprite
 	//Reloads the weapon by adding the relevant amount to the inclip ammo
 	function reloadWeapon(timer:FlxTimer) 
 	{
-		_ammoInClip = _ammoOutOfClip>MAX_AMMO_IN_CLIP?MAX_AMMO_IN_CLIP:_ammoOutOfClip;	//Add most amount
-		_ammoOutOfClip -= _ammoInClip;								//Substract difference
+		var diff:Int = MAX_AMMO_IN_CLIP -_ammoInClip;				//Calc difference
+		_ammoInClip = _ammoOutOfClip>MAX_AMMO_IN_CLIP?MAX_AMMO_IN_CLIP:_ammoOutOfClip;
+		_ammoOutOfClip -= diff>_ammoOutOfClip?_ammoOutOfClip:diff;
 		_reloading = false;
 		updateAmmoText();											//Update ammo ui text
 	}
@@ -340,32 +336,35 @@ class Player extends FlxSprite
 		
 		if(FlxG.keys.pressed.ESCAPE ){
 			FlxG.camera.fade(FlxColor.BLACK, .66, false, function() {	//Fade out
-				FlxG.switchState(new EndGameState("Restart?"));	//Switch state
+				FlxG.switchState(new EndGameState("Restart?"));			//Switch state
 			});
 		}
+		//Firing key
 		if (FlxG.keys.pressed.SPACE&&FlxG.game.ticks >=_rifle.nextFire)
 		{
-			if(_ammoInClip>0){
+			if(_ammoInClip>0){											//Has ammo
 				FlxG.log.add("Fired bullet");
 				_rifle.fireFromAngle(facing == FlxObject.LEFT?FlxWeapon.BULLET_LEFT:FlxWeapon.BULLET_RIGHT);
 				FlxG.sound.play(FileReg.sndWRifle);
 				_ammoInClip--;
 				updateAmmoText();
-			}else {
+			}else {														//Check reload if no ammo in clip
 				reload();
 			}
 		}
+		//Flashlight key
 		if (FlxG.keys.pressed.F )
 		{
 			if (_canToggle) {
 				_canToggle = false;
 				FlxG.sound.play(FileReg.sndToggle, 1, false);
-				_flashLight.visible = !_flashLight.visible;
+				_flashLight.visible = !_flashLight.visible;				//Display flashlight
 				
-				new FlxTimer(0.3, allowToggle, 1);
+				new FlxTimer(0.3, allowToggle, 1);						//Prevent continuous toggle
 				_flashLightClear = true;
 			}
 		}
+		//Reload key
 		if (FlxG.keys.pressed.R )
 		{
 			reload();
@@ -386,31 +385,34 @@ class Player extends FlxSprite
 	//Changes player hair color
 	public function changeHairColor(col:Int):Void {
 		for ( i  in 0 ... _hair.length) {
+			//Create ARGB from RGB
 			var newCol:Int =FlxColorUtil.makeFromARGB(1,Math.floor(FlxColorUtil.getRed(col) * FlxColorUtil.getRed(_hairGreyscale[i]) / 255),Math.floor(FlxColorUtil.getGreen(col) * FlxColorUtil.getGreen(_hairGreyscale[i]) / 255),Math.floor(FlxColorUtil.getBlue(col) * FlxColorUtil.getBlue(_hairGreyscale[i]) / 255));
-			if (newCol != FlxColor.BLACK){
-				replaceColor(_hair[i], newCol, false);
-				_hair[i] = newCol;
+			if (newCol != FlxColor.BLACK){					//Qwerk of sliders
+				replaceColor(_hair[i], newCol, false);		//Replace the color
+				_hair[i] = newCol;							//Save the color so can know to replace that next time
 			}
 
 		}
 	}
+	//Replaces the current armor color with a new one
 	public function changeArmorColor(col:Int):Void {
 		for ( i  in 0 ... _armor.length) {
 			var newCol:Int =FlxColorUtil.makeFromARGB(1,Math.floor(FlxColorUtil.getRed(col) * FlxColorUtil.getRed(_armorGreyscale[i]) / 255),Math.floor(FlxColorUtil.getGreen(col) * FlxColorUtil.getGreen(_armorGreyscale[i]) / 255),Math.floor(FlxColorUtil.getBlue(col) * FlxColorUtil.getBlue(_armorGreyscale[i]) / 255));
 			if (newCol != FlxColor.BLACK){
-				replaceColor(_armor[i], newCol, false);
-				_armor[i] = newCol;
+				replaceColor(_armor[i], newCol, false);		//Replace the color
+				_armor[i] = newCol;							//Save the color so can know to replace that next time
 			}
 
 		}
 	}
+	//Replaces the current skin color with a new one
 	public function changeSkinColor(index:Int):Void {
 		var col:Int = _skinSwatch[index];
 		for ( i  in 0 ... _skin.length) {
 			var newCol:Int =FlxColorUtil.makeFromARGB(1,Math.floor(FlxColorUtil.getRed(col) * FlxColorUtil.getRed(_skinGreyscale[i]) / 255),Math.floor(FlxColorUtil.getGreen(col) * FlxColorUtil.getGreen(_skinGreyscale[i]) / 255),Math.floor(FlxColorUtil.getBlue(col) * FlxColorUtil.getBlue(_skinGreyscale[i]) / 255));
 			if (newCol != FlxColor.BLACK){
-				replaceColor(_skin[i], newCol, false);
-				_skin[i] = newCol;
+				replaceColor(_skin[i], newCol, false);		//Replace the color
+				_skin[i] = newCol;							//Save the color so can know to replace that next time
 			}
 
 		}
