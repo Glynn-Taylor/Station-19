@@ -17,20 +17,21 @@
   <classpaths>
     <class path="C:\HaxeToolkit\haxe\lib\flixel-addons\1,1,0" />
     <class path="C:\HaxeToolkit\haxe\lib\flixel-ui\1,0,2" />
-    <class path="C:\HaxeToolkit\haxe\lib\openfl\2,1,0" />
+    <class path="C:\HaxeToolkit\haxe\lib\openfl\2,1,2" />
     <class path="C:\HaxeToolkit\haxe\lib\flixel\3,3,5" />
-    <class path="C:\HaxeToolkit\haxe\lib\lime\2,0,0-alpha" />
+    <class path="C:\HaxeToolkit\haxe\lib\lime\2,0,0-alpha,4" />
     <class path="source" />
-    <class path="export\flash\haxe" />
+    <class path="C:\HaxeToolkit\haxe\lib\lime\2,0,0-alpha,4\legacy" />
+    <class path="export\windows\cpp\haxe" />
   </classpaths>
   <!-- Build options -->
   <build>
-    <option directives="flixel-addons=1.1.0&#xA;flixel-ui=1.0.2&#xA;openfl=2.1.0&#xA;flixel=3.3.5&#xA;lime=2.0.0-alpha&#xA;tools=2.0.0-alpha&#xA;FLX_NO_DEBUG&#xA;no-compilation&#xA;NAPE_RELEASE_BUILD&#xA;openfl-flash&#xA;FLX_RENDER_BLIT&#xA;web" />
+    <option directives="flixel-addons=1.1.0&#xA;flixel-ui=1.0.2&#xA;openfl=2.1.2&#xA;flixel=3.3.5&#xA;lime=2.0.0-alpha.4&#xA;tools=2.0.0-alpha.4&#xA;lime-legacy&#xA;FLX_NO_DEBUG&#xA;no-compilation&#xA;NAPE_RELEASE_BUILD&#xA;native&#xA;lime-native&#xA;openfl-native&#xA;FLX_RENDER_TILE&#xA;windows&#xA;desktop" />
     <option flashStrict="False" />
     <option noInlineOnDebug="False" />
     <option mainClass="ApplicationMain" />
     <option enabledebug="False" />
-    <option additional="-swf-version 11.8" />
+    <option additional="--remap flash:openfl&#xA;--macro keep(&quot;Main&quot;)" />
   </build>
   <!-- haxelib libraries -->
   <haxelib>

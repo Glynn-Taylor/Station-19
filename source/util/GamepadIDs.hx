@@ -5,7 +5,7 @@ import flixel.input.gamepad.OUYAButtonID;
 
 /**
  * NOTE: This should probably be inside FlxGamepad.
- * @author crazysam, edits by Glynn Taylor
+ * @author crazysam (HaxeFlixel), edits by Glynn Taylor
  * Handles compilation specific IDs
  */
 class GamepadIDs

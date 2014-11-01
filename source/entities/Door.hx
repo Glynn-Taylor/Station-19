@@ -1,21 +1,17 @@
 package entities;
-import flixel.FlxG;
 import flixel.FlxObject;
-import flixel.FlxSprite;
-import flixel.tweens.FlxTween;
-import flixel.util.FlxPoint;
-import openfl.display.BlendMode;
 import util.FileReg;
 
 /**
- * ...
  * @author Glynn Taylor
+ * A useable door, cannot be unopened currently as could close on non player character
  */
 class Door extends Triggerable {
 
 	var _opening:Bool = false;
 	var _closing:Bool = false;
-	private static inline var OFFSET_X:Int = 4;
+	private static inline var OFFSET_X:Int = 4;		//Offset for sprite
+	//CONSTRUCTOR//
     public function new(x:Float, y:Float):Void {
 		
 		super(x, y);
@@ -27,6 +23,7 @@ class Door extends Triggerable {
 		animation.add("close", [7,6,5,4,3,2,1,0], 16, false);
 		immovable = true;
     }
+	//On triggered by button etc
 	override public function Trigger(cause:FlxObject) {
 		_opening = true;
 		if(!_closing){
@@ -37,14 +34,11 @@ class Door extends Triggerable {
 	override public function update():Void 
 	{
 		if (_opening) {
-			if (!animation.finished) {
-				animation.play("open");
-			}else {
+			if (animation.finished) {				//If finished opening
 				_opening = false;
-				solid = false;
+				solid = false;						//Make the door non collideable when opened
 			}
 		}
-		
 		super.update();
 	}
 }

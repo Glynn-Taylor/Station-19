@@ -1,8 +1,8 @@
 package util;
 
 /**
- * ...
  * @author Glynn Taylor
+ * Stores File paths for resources for easy modification to paths and names
  */
 class FileReg
 {

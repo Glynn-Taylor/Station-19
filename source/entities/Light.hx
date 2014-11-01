@@ -1,44 +1,33 @@
 package entities;
 import flixel.FlxSprite;
-import flixel.util.FlxPoint;
 import openfl.display.BlendMode;
 import util.FileReg;
 
 /**
- * ...
- * @author ...
+ * @author Glynn Taylor
+ * Static light, stamps its "light" sprite onto the darkness overlay upon creation
  */
 class Light extends FlxSprite {
-
- 
-    private var darkness:FlxSprite;
-    
+    //CONSTRUCTOR
     public function new(x:Float, y:Float, darkness:FlxSprite, scaling:Float,col:Int=0xFFFFFFFF):Void {
-		
-		super(x, y);
+		super(x, y);								//Set position
 		loadGraphic(FileReg.imgLight, false, 64, 64);
-		color = col;
-		this.scale.set(scaling*1, scaling*1);
-		//this.scale set;
-		this.darkness = darkness;
+		color = col;								//Set light color
+		this.scale.set(scaling*1, scaling*1);		//Set size of light
 		this.blend = BlendMode.SCREEN;
-		 var screenXY:FlxPoint = getScreenXY();
-	  // blend = "screen";
-	  try{
-		darkness.stamp(this,
+		try{
+			darkness.stamp(this,
                     Math.floor(x),
-                  Math.floor(y));
-	  }catch (e:String) {
-		  trace(screenXY.x - this.width / 2);
-		  trace(e);
-	  }
+                  Math.floor(y));					//Imprint the image on the darkness sprite
+		}catch (e:String) {
+			trace(e);
+		}
     }
 	
     override public function draw():Void {
-    
-	  // blend = "overlay";
+		//Prevents further draw
     }
 	public function finalise() {
-		 
+		//Post stamping
 	}
 }

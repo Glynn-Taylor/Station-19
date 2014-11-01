@@ -7,27 +7,20 @@ import flixel.FlxG;
 import flixel.FlxObject;
 import flixel.FlxSprite;
 import flixel.group.FlxTypedGroup;
-import flixel.input.gamepad.FlxGamepad;
-import flixel.input.keyboard.FlxKeyboard;
 import flixel.system.FlxSound;
 import flixel.text.FlxText;
 import flixel.tweens.FlxTween;
 import flixel.ui.FlxBar;
-import flixel.util.FlxAngle;
 import flixel.util.FlxColor;
 import flixel.util.FlxColorUtil;
-import flixel.util.FlxDestroyUtil;
 import flixel.util.FlxMath;
-import flixel.util.FlxPoint;
 import flixel.util.FlxTimer;
 import state.EndGameState;
-import state.PlayState;
 import util.FileReg;
 import util.GamepadIDs;
 import util.Reg;
 
 /**
- * ...
  * @author Glynn Taylor
  * Player sprite and logic
  */
@@ -40,6 +33,7 @@ class Player extends FlxSprite
 	private static inline var FLASHLIGHT_Y:Int = -5;
 	private static inline var FLASHLIGHT_RATE:Float = 0.1;
 	private static inline var MAX_AMMO_IN_CLIP:Int = 16;
+	private static inline var RELOAD_TIME:Int = 1;
 	private static inline var UI_X:Int = 7;
 	private static inline var UI_Y:Int = 20;
 	//Reference vars
@@ -132,99 +126,56 @@ class Player extends FlxSprite
 		_darknessSound = FlxG.sound.play(FileReg.sndMDarkness,1,true);
 		_darknessSound.volume = 0;
 		FlxG.state.add(_darknessMonster);
-		//FlxG.game.
-		//FlxG.state.add(_ammoText);
 	}
 	
-	public function makeWeapon() 
-	{
-		_rifle = new FlxWeapon("rifle", this);
-			
-			//	Tell the weapon to create 100 bullets using a 2x2 white pixel bullet
-			_rifle.makePixelBullet(100, 1, 1, 0xff444444, 13, 12);
-			//	Bullets will move at 120px/sec
-			_rifle.setBulletSpeed(256);
-			//	But bullets will have gravity pulling them down to earth at a rate of 60px/sec
-			_rifle.setBulletGravity(0, 0);
-			//	As we use the mouse to fire we need to limit how many bullets are shot at once (1 every 50ms)
-			_rifle.setFireRate(200);
-			_rifle.setBulletBounds(FlxG.worldBounds);
-			FlxG.state.add(_rifle.group);
-	}
-	public function setGameScale():Void {
-		scale.set(0.5, 0.8);
-	}
-	public function createAnimations() {
-		setFacingFlip(FlxObject.LEFT, false, false);			//Assign flipping of animation based on "facing" variable
-		setFacingFlip(FlxObject.RIGHT, true, false);			
-		animation.add("d", [4, 4, 4, 4], 6, false);				//Assign frames to animation names
-		animation.add("lr", [8, 9, 10, 11, 12, 13, 14, 15], 12, false);
-		animation.add("u", [4, 4, 4, 4], 6, false);
-	}
-	public function trackLight(lights:FlxTypedGroup<Light>) {
-		_lights = lights;
-		new FlxTimer(0.5, checkLight, 0);	//Loop indef
-	}
-	private function checkLight(timer:FlxTimer) {
-		_inLight = false;
-		for (light in _lights) {
-			if (FlxMath.distanceBetween(this, light) < light.scale.x * 20) {
-				_inLight = true;
-				break;
-			}
-		}
-		if (_inLight){
-			_lightLevel = 100;
-			FlxTween.tween(_darknessMonster,{alpha: 0}, 0.5);
-			_darknessSound.volume = 0;
-			_darknessMonster.setPosition( -10, 50);
-		}
-		//FlxG.log.add("light level: " + Std.string(_lightLevel));
-	}
+	//GAME LOGIC//
+	
 	//Runs every frame
 	override public function update():Void 
 	{
-		//_gamepad =FlxG.gamepads.getByID(_padID);				//Get pad
+		//Check for flashlight clear
 		if (_flashLightClear) {
 			_flashLight.clear();
 			_flashLightClear = false;
 		}
-		acceleration.x = 0;
-		if(!_isHidden){
-			keyboardMovement();
-			keyboardButtons();
-		
-			updateAxis(GamepadIDs.LEFT_ANALOGUE_X, GamepadIDs.LEFT_ANALOGUE_Y);	//Movement and animation
-			updateButtons();										//Jumping and firing
+		acceleration.x = 0;					//Allow for sharp movement
+		//Move if not hiding
+		if (!_isHidden) {
+			//Keyboard
+			keyboardMovement();				//Movement
+			keyboardButtons();				//Other buttons
+			//Controller
+			updateAxis(GamepadIDs.LEFT_ANALOGUE_X, GamepadIDs.LEFT_ANALOGUE_Y);
+			updateButtons();
 		}
-		checkAnimation();
-		if (_flashLightEquipped){
-			_flashLight.setPosition(this.x + FLASHLIGHT_X - (_flashLight.facing == FlxObject.LEFT?_flashLight.width:0), this.y + FLASHLIGHT_Y);
-		//syncText();
-		//Sets ammo indicator position
-		if (_flashLight.visible) {
-			_flashLightEnergy -= FLASHLIGHT_RATE;
-			if (_flashLightEnergy < 1){
-				_flashLight.visible = false;
-				_flashLightClear = true;
+		checkAnimation(); 					//Sets facing direction and flashlight facing
+		
+		if (_flashLightEquipped&&_flashLight.visible) {
+			_flashLightEnergy -= FLASHLIGHT_RATE;//Decrease flashlight energy
+			if (_flashLightEnergy < 1){		//Turn of flashlight when power runs out
+				forceLightOff();
 			}
+			//Sync flashlight position
+			_flashLight.setPosition(this.x + FLASHLIGHT_X - (_flashLight.facing == FlxObject.LEFT?_flashLight.width:0), this.y + FLASHLIGHT_Y);
+	
 		}else {
+			//Increase flashlight energy if off
 			if (_flashLightEnergy < 100)
 				_flashLightEnergy += FLASHLIGHT_RATE;
 		}
-		}
+		
+		//Update UI elements
 		_flashlightBar.percent = _flashLightEnergy;
 		_healthBar.percent = health;
 		
-		
 		if (!_inLight) {
-			_lightLevel -= 0.07;
+			_lightLevel -= 0.07;	//Decrement light level if not in any lights
 		}
 		if (_lightLevel < 80)
-			updateDarkness();
+			updateDarkness();		//Acitvate darkness when light level low
 		super.update();
 	}
-	
+	//Updates darkness monster if light level low enough
 	function updateDarkness() 
 	{
 		if (_flashLight.visible) {
@@ -259,32 +210,131 @@ class Player extends FlxSprite
 			kill();
 		}
 	}
-	
+	//Creates weapon and creates bullets
+	public function makeWeapon() 
+	{
+		_rifle = new FlxWeapon("rifle", this);
+		_rifle.makePixelBullet(100, 1, 1, 0xff444444, 13, 12);	//Tell the weapon to create bullets
+		_rifle.setBulletSpeed(256);								//Bullets will move at 120px/sec
+		_rifle.setBulletGravity(0, 0);
+		_rifle.setFireRate(200);								//Fire every 200ms
+		_rifle.setBulletBounds(FlxG.worldBounds);				//Allow bullets anywhere inside world
+		FlxG.state.add(_rifle.group);
+	}
+	//Set players scale to be smaller for game world
+	public function setGameScale():Void {
+		scale.set(0.5, 0.8);									//Make slightly smaller for game world
+	}
+	//Assigns player animations
+	public function createAnimations() {
+		setFacingFlip(FlxObject.LEFT, false, false);			//Assign flipping of animation based on "facing" variable
+		setFacingFlip(FlxObject.RIGHT, true, false);			
+		animation.add("d", [4, 4, 4, 4], 6, false);				//Assign frames to animation names
+		animation.add("lr", [8, 9, 10, 11, 12, 13, 14, 15], 12, false);
+		animation.add("u", [4, 4, 4, 4], 6, false);
+	}
+	//Start light tracking, light is checked every 0.5 seconds (if in light, darkness monster will run away)
+	public function trackLight(lights:FlxTypedGroup<Light>) {
+		_lights = lights;
+		new FlxTimer(0.5, checkLight, 0);	//Loop indef
+	}
+	//Checks if near any of the lights
+	private function checkLight(timer:FlxTimer) {
+		_inLight = false;
+		for (light in _lights) {
+			//20 px roughly size of actual width/height
+			if (FlxMath.distanceBetween(this, light) < light.scale.x * 20) {	//If near any of the lights then set status
+				_inLight = true;
+				break;
+			}
+		}
+		if (_inLight){
+			_lightLevel = 100;										//Reset light level
+			FlxTween.tween(_darknessMonster,{alpha: 0}, 0.5);		//Fadeout monster
+			_darknessSound.volume = 0;								//Cut monster sound
+			_darknessMonster.setPosition( -10, 50);					//Hide monster offscreen
+		}
+	}
+	//Starts the reloading sequence on key press
 	function reload() {
 		if (_ammoOutOfClip > 0) {
 			if (!_reloading) {
-				new FlxTimer(1, reloadWeapon, 1);
+				new FlxTimer(RELOAD_TIME, reloadWeapon, 1);			//Reload ammo after reloading time elapsed
 				_reloading = true;
 				FlxG.sound.play(FileReg.sndWEmpty);
 				FlxG.sound.play(FileReg.sndWReload);
 			}
 		}else {
-			FlxG.sound.play(FileReg.sndWEmpty);
+			FlxG.sound.play(FileReg.sndWEmpty);						//Out of ammo
 		}
 	}
+	//Reloads the weapon by adding the relevant amount to the inclip ammo
 	function reloadWeapon(timer:FlxTimer) 
 	{
-		var diff:Int = MAX_AMMO_IN_CLIP -_ammoInClip;
-		_ammoInClip = _ammoOutOfClip>MAX_AMMO_IN_CLIP?MAX_AMMO_IN_CLIP:_ammoOutOfClip;
-		_ammoOutOfClip -= diff>_ammoOutOfClip?_ammoOutOfClip:diff;
+		_ammoInClip = _ammoOutOfClip>MAX_AMMO_IN_CLIP?MAX_AMMO_IN_CLIP:_ammoOutOfClip;	//Add most amount
+		_ammoOutOfClip -= _ammoInClip;								//Substract difference
 		_reloading = false;
-		updateAmmoText();
-	}
-	function updateAmmoText() 
-	{
-		_ammoText.text = Std.string(_ammoInClip) + "/" + Std.string(_ammoOutOfClip);
+		updateAmmoText();											//Update ammo ui text
 	}
 	
+	//Adds ammo to the out of clip ammo
+	public function addAmmo(amount:Int):Void {
+		_ammoOutOfClip += amount;
+		updateAmmoText();						//Update ammo ui text
+	}
+	//Allows the player to toggle objects again
+	function allowToggle(timer:FlxTimer) {
+		_canToggle = true;
+	}
+	//Updates which direction player is facing so animations can flip
+	function checkAnimation() 
+	{
+			//Animation//
+			if (acceleration.x > 0) {
+				facing = FlxObject.RIGHT;						//Facing determines flipping
+				animation.play("lr");
+				if (_flashLightEquipped)
+					_flashLight.facing= FlxObject.RIGHT;
+			}else if (acceleration.x < 0) {
+				animation.play("lr");
+				facing = FlxObject.LEFT;
+				if (_flashLightEquipped)
+					_flashLight.facing= FlxObject.LEFT;
+			}else {
+				animation.play("u");							//Idling anim
+			}
+	}
+	
+	//USER INPUT FUNCTIONS//
+	
+	//Handles keyboard movement keys
+	function keyboardMovement() 
+	{
+		var _up:Bool = FlxG.keys.anyPressed(["UP", "W"]);
+		var _down:Bool = FlxG.keys.anyPressed(["DOWN", "S"]);
+		var _left:Bool = FlxG.keys.anyPressed(["LEFT", "A"]);
+		var _right:Bool = FlxG.keys.anyPressed(["RIGHT", "D"]);
+		
+		if (_left || _right) {
+			acceleration.x = maxVelocity.x * 5*(_left?-1:1);		//Create x movement
+		}
+		if(_up){
+			if (!_onLadder) {
+				if(isTouching(FlxObject.FLOOR)){
+					velocity.y = -maxVelocity.y / 3;				//Jump
+				}
+			}else {
+				velocity.y = maxVelocity.x*-1;						//Move up
+			}
+		}else if (_down) {
+			if (_onLadder)
+				velocity.y = maxVelocity.x;							//Move down
+		}else {
+			if (_onLadder)
+				velocity.y = 0;										//Prevent slippage
+		}
+	}
+	//Handles keyboard buttons
 	function keyboardButtons() 
 	{
 		
@@ -322,156 +372,18 @@ class Player extends FlxSprite
 		}
 		
 	}
-	function allowToggle(timer:FlxTimer) {
-		_canToggle = true;
-	}
-	function checkAnimation() 
-	{
-			//Animation//
-			if (acceleration.x > 0) {
-				facing = FlxObject.RIGHT;						//Facing determines flipping
-				animation.play("lr");
-				if (_flashLightEquipped)
-					_flashLight.facing= FlxObject.RIGHT;
-			}else if (acceleration.x < 0) {
-				animation.play("lr");
-				facing = FlxObject.LEFT;
-				if (_flashLightEquipped)
-					_flashLight.facing= FlxObject.LEFT;
-			}else {
-				animation.play("u");
-			}
-	}
-	
-	function keyboardMovement() 
-	{
-		var _up:Bool = FlxG.keys.anyPressed(["UP", "W"]);
-		var _down:Bool = FlxG.keys.anyPressed(["DOWN", "S"]);
-		var _left:Bool = FlxG.keys.anyPressed(["LEFT", "A"]);
-		var _right:Bool = FlxG.keys.anyPressed(["RIGHT", "D"]);
-		
-		if (_left || _right) {
-			acceleration.x = maxVelocity.x * 5*(_left?-1:1);			//Create x movement
-		}
-		if(_up){
-			if (!_onLadder) {
-				if(isTouching(FlxObject.FLOOR)){
-					velocity.y = -maxVelocity.y / 3;
-					FlxG.log.add("player jumped");
-				}
-			}else {
-				velocity.y = maxVelocity.x*-1;
-			}
-		}else if (_down) {
-			if (_onLadder)
-				velocity.y = maxVelocity.x;
-		}else {
-			if (_onLadder)
-				velocity.y = 0;
-		}
-		
-	}
-
-	//Sets ammo indicator position
-	private function syncText() {
-		_ammoText.x = x+10-(_ammoText.width);
-		_ammoText.y = y-10;
-	}
-	//Movement and animation (checks buttons)
-	private function updateButtons():Void {
-		
-		/*if ((_gamepad.pressed(GamepadIDs.A)||_gamepad.pressed(GamepadIDs.LogiA))&& isTouching(FlxObject.FLOOR))	//Test jump button and onfloor
-			velocity.y = -maxVelocity.y / 2;					//Jump
-			
-		if ((_gamepad.pressed(GamepadIDs.X) || _gamepad.pressed(GamepadIDs.LogiX)) && !_hasFired && _numArrows > 0) {//Test fire button, antispam, has arrows
-			//Firing//
-			var arw:Arrow = cast(cast(FlxG.state , PlayState)._grpArrows.recycle(), Arrow);	//Recyle an new arrow (pulls a dead arrow from pool)
-			arw.reset(x + (width - arw.width) / 2, y + (height - arw.height) / 2);	//Ressurect arrow with new position
-			arw.degShoot(_lastAngle);							//Fire arrow with angle
-			arw.color = color;
-			_hasFired = true;									//Anti spam bool
-			_numArrows--;										//Decrease ammo
-			new FlxTimer(0.2, canFireAgain, 1);					//Timer to reset anti spam bool
-			//UI-Sound//
-			_ammoText.text= _ammoText.text.substr(0,_ammoText.text.length-1);
-			_sndFire.play();
-		}*/
-	}
-	//Resets anti arrow-spam bool
-	private function canFireAgain(Timer:FlxTimer):Void
-	{
-		_hasFired = false;
-	}
-	//Resets anti dash-spam bool
-	private function canDashAgain(Timer:FlxTimer):Void
-	{
-		_hasDashed = false;
-	}
 	//Handles movement and animation after checking controller stick
 	private function updateAxis(xID:Int, yID:Int):Void
 	{
-		/*var xAxisValue = _gamepad.getXAxis(xID);				//Get x and y movement from controller stick
-		var yAxisValue = _gamepad.getYAxis(yID);
-		var angle:Float;
-		
-		if ((xAxisValue != 0) || (yAxisValue != 0))				//On movement
-		{
-			angle = Math.atan2(yAxisValue, xAxisValue);
-			 _lastAngle = angle;
-			var offsetx:Float = SPEED * Math.cos(angle);
-			var offsety:Float = SPEED * Math.sin(angle);
-			acceleration.x = maxVelocity.x * offsetx;			//Create x movement
-			//Animation//
-			if (acceleration.x > 0) {
-				facing = FlxObject.RIGHT;						//Facing determines flipping
-				animation.play("lr");
-			}else if (acceleration.x < 0) {
-				animation.play("lr");
-				facing = FlxObject.LEFT;
-			}
-			_sndStep.play();
-			_fireLine.angle = radToDeg(angle);					//Store angle for firing/fireline reference
-			
-			//DASHING WIP(Currently broken, y!=x)
-			/*if (!_hasDashed&&_gamepad.pressed(GamepadIDs.B)) {
-				velocity.x = DASH_SPEED * offsetx;
-				velocity.y = DASH_SPEED * offsety;
-				_hasDashed = true;
-				new FlxTimer(1, canDashAgain, 1);
-			}*/
-		//}
+		//Currently no controller support
 	}
-	//On death of player destroy UI too
-	override public function kill():Void 
-	{
-		//if(_ammoText!=null)
-		//_ammoText.kill();
-		super.kill();
-		FlxG.camera.fade(FlxColor.BLACK, .66, false, function() {
-			FlxG.log.add("player dead, swapping to end screen");
-			FlxG.switchState(new EndGameState("You died.."));
-		});
+	//Checks controller buttons
+	private function updateButtons():Void {
+		//Currently no controller support
 	}
-	//(ammo++)
-	public function addAmmo(amount:Int):Void {
-		_ammoOutOfClip += amount;
-		FlxG.log.add("gained " + Std.string(amount) + " ammo");
-		updateAmmoText();
-	}
-	//Convert radians to degrees
-	public inline static function radToDeg(rad:Float):Float
-	{
-		return 180 / Math.PI * rad;
-	}
-	//Cleanup
-	override public function destroy():Void 
-	{
-		super.destroy();
-		//_sndFire = FlxDestroyUtil.destroy(_sndFire);
-		//_sndStep = FlxDestroyUtil.destroy(_sndStep);
-		//_ammoText= FlxDestroyUtil.destroy(_ammoText);
-	}
+	//CHAR CREATION FUNCTIONS//
 	
+	//Changes player hair color
 	public function changeHairColor(col:Int):Void {
 		for ( i  in 0 ... _hair.length) {
 			var newCol:Int =FlxColorUtil.makeFromARGB(1,Math.floor(FlxColorUtil.getRed(col) * FlxColorUtil.getRed(_hairGreyscale[i]) / 255),Math.floor(FlxColorUtil.getGreen(col) * FlxColorUtil.getGreen(_hairGreyscale[i]) / 255),Math.floor(FlxColorUtil.getBlue(col) * FlxColorUtil.getBlue(_hairGreyscale[i]) / 255));
@@ -503,21 +415,27 @@ class Player extends FlxSprite
 
 		}
 	}
+	//Reset colors to default values
 	public function resetColorCache() {
 		_hair = [0xFFEFD074, 0xFFD58308, 0xFF824100];
 		_armor= [0xFFFFF200, 0xFFFFC90E];
 		_skin= [0xFFF6D5A4, 0xFFDE9462];
 	}
+	
+	//UI FUNCTIONS//
+	
+	//Creates a flashlight fo the player
 	public function createFlashLight(darkness:FlxSprite) {
 		_flashLight = new FlashLight(this.x, this.y, darkness, 1);
 		_flashLight.loadGraphic(FileReg.imgFlashlight, false, 128, 32);
-		_flashLight.setFacingFlip(FlxObject.LEFT, true, false);			//Assign flipping of animation based on "facing" variable
+		_flashLight.setFacingFlip(FlxObject.LEFT, true, false);		//Assign flipping of animation based on "facing" variable
 		_flashLight.setFacingFlip(FlxObject.RIGHT, false, false);	
 		FlxG.state.add(_flashLight);
 		_flashLightEquipped = true;
-		_flashLight.facing = FlxObject.LEFT;
-		_flashLight.set_visible(false );
+		_flashLight.facing = FlxObject.LEFT;						//Player defaults facing left
+		_flashLight.set_visible(false );							//Initially flashlight off
 	}
+	//Adds elements to the UI group for the UI camera, also creates elements that dont need to be global
 	public function addUI(grp:FlxUIGroup):Void {
 		grp.add(_flashlightBar);
 		grp.add(_healthBar);
@@ -531,17 +449,33 @@ class Player extends FlxSprite
 		healthIcon.scrollFactor.set(0, 0);
 		grp.add(healthIcon);
 	}
-	
+	//Helper function to force the flashlight to turn off, also starts a flush of flashlight image on next frame (prevents flush before draw)
 	public function forceLightOff() 
 	{
 		_flashLight.visible = false;
 		_flashLightClear = true;
 	}
+	//Updates the ammo ui text
+	function updateAmmoText() 
+	{
+		_ammoText.text = Std.string(_ammoInClip) + "/" + Std.string(_ammoOutOfClip);
+	}
+	//Clean several elements on level load to allow for changes in level (lights), also resets health to make game easier
 	public function clean() {
 		forceLightOff(); 
 		health = 100;
 		_lights = null;
 	}
+	//On death of player destroy and change to death screen
+	override public function kill():Void 
+	{
+		super.kill();
+		FlxG.camera.fade(FlxColor.BLACK, .66, false, function() {
+			FlxG.log.add("player dead, swapping to end screen");
+			FlxG.switchState(new EndGameState("You died.."));			//Swap state
+		});
+	}
+	//Cleanup several UI elements on level load to allow them to be recreated on top with new ui camera (prevents zoom break)
 	public function cleanup() {
 		_flashlightBar = null;
 		_healthBar = null;

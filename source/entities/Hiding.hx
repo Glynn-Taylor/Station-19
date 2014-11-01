@@ -6,14 +6,15 @@ import player.Player;
 import util.FileReg;
 
 /**
- * ...
  * @author ApexRUI
+ * A useable hiding spot that hides the player from monster if they are not tracking them
  */
 class Hiding extends Useable
 {
-	private var _amIn:Bool = false;
-	private var _canBePressed:Bool = true;
+	private var _amIn:Bool = false;				//Whether or not player is inside
+	private var _canBePressed:Bool = true;		//Bool to prevent continuous in/out 
 	
+	//CONSTRUCTOR//
 	public function new(x:Int,y:Int) 
 	{
 		super(x, y);
@@ -24,36 +25,20 @@ class Hiding extends Useable
 	
 	override public function interact(_player:Player, _triggerMap:Map<Int,Triggerable>) {
 		if(_canBePressed){
-			_player._isHidden = !_player._isHidden;
-			//_player.alpha = _player._isHidden?0.2:1;
+			_player._isHidden = !_player._isHidden;			//Update player with hidden status
 			_amIn = !_amIn;
 			FlxG.sound.play(FileReg.sndButton, 1, false);
 			if(_amIn){
 				animation.play("close");
-				FlxTween.tween(_player,{alpha: 0}, 1);
-				_player.forceLightOff();
+				FlxTween.tween(_player,{alpha: 0}, 1);		//Tween player alpha after playing close anim
+				_player.forceLightOff();					//Ensure player flashlight turns off as hiding
 			}else {
 				FlxTween.tween(_player,{alpha: 1}, 1);
 				animation.play("open");
 			}
-			new FlxTimer(1, canBePressedAgain, 1);
+			new FlxTimer(1, function(_) { _canBePressed = true; }, 1);//Allow more presses after a second
 			_canBePressed = false;
 		}
 		
-	}
-	override public function update():Void 
-	{
-		if (!animation.finished) {
-			if(_amIn){
-				animation.play("close");
-			}else {
-				animation.play("open");
-			}
-		}
-		super.update();
-	}
-	private function canBePressedAgain(Timer:FlxTimer):Void
-	{
-		_canBePressed = true;
 	}
 }

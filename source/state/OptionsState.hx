@@ -115,17 +115,4 @@ class OptionsState extends FlxState
 		_barVolume.currentValue = vol;
 		_txtVolumeAmt.text = Std.string(vol) + "%";
 	}
-	//Cleans up variables
-	override public function destroy():Void 
-	{
-		super.destroy();
-		/*_txtTitle = FlxDestroyUtil.destroy(_txtTitle);
-		_barVolume = FlxDestroyUtil.destroy(_barVolume);
-		_txtVolume = FlxDestroyUtil.destroy(_txtVolume);			//Flash crashes???
-		_txtVolumeAmt = FlxDestroyUtil.destroy(_txtVolumeAmt);
-		_btnVolumeDown = FlxDestroyUtil.destroy(_btnVolumeDown);
-		_btnVolumeUp = FlxDestroyUtil.destroy(_btnVolumeUp);
-		_btnClearData = FlxDestroyUtil.destroy(_btnClearData);
-		_btnBack = FlxDestroyUtil.destroy(_btnBack);*/
-	}
 }

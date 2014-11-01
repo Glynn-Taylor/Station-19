@@ -177,7 +177,7 @@ class MenuState extends FlxState
 	private function clickCredits():Void
 	{
 		FlxG.camera.fade(FlxColor.BLACK,.33, false,function() {		//Fade out
-			FlxG.switchState(new InfoState("Credits","Programming: Glynn Taylor\nArt/Music: OpenGameArt (multiple)\nFreesound(multiple)\nsee assets for attribution lists"));
+			FlxG.switchState(new InfoState("Credits","-Programming-\nGlynn Taylor\nZoomCamera: Greg Lieberman (www.kwarp.com)\n-Sounds-\nChain Gun, Monsters: Michel Baradari\n-Music-\nFreesound(multiple\n-enemy textures-\nStephen 'Redshrike' Challener, hosted by OpenGameArt.org\nsee assets for attribution links, not all used"));
 		});
 	}
 	//Handles "controls" button click
